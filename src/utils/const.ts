@@ -40,3 +40,5 @@ export const SuccessResponse = (request: Request, response: Response, data? : an
         data: data
     })
 }
+
+export const RESOLUTIONS_TABLE_NAME = 'resolutions'
