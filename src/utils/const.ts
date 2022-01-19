@@ -41,4 +41,5 @@ export const SuccessResponse = (request: Request, response: Response, data? : an
     })
 }
 
-export const RESOLUTIONS_TABLE_NAME = 'resolutions'
+export const RESOLUTIONS_TABLE_NAME = 'resolutions';
+export const COUNTRIES_TABLE_NAME = 'countries';
