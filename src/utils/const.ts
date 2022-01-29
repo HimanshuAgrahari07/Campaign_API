@@ -2,7 +2,8 @@ import { Request, Response, NextFunction, Router } from 'express';
 
 enum status {
     SUCCESS = 'SUCCESS',
-    FAIL = 'FAIL'
+    FAIL = 'FAIL',
+    BLOCKED = 'BLOCKED',
 }
 
 export const GenericError = {
@@ -29,7 +30,23 @@ export const GenericError = {
             statusText: status.SUCCESS,
             errorCode: 'NOT_FOUND',
         }
-    }
+    },
+    WrongAuthentication: {
+        error: {
+            status: 401,
+            message: 'Wrong authentication token',
+            statusText: status.BLOCKED,
+            errorCode: 'BLOCKED',
+        }
+    },
+    AuthenticationTokenMissing: {
+        error: {
+            status: 401,
+            message: 'Authentication token missing',
+            statusText: status.BLOCKED,
+            errorCode: 'BLOCKED',
+        }
+    },
 }
 
 export const SuccessResponse = (request: Request, response: Response, data? : any) => {
@@ -43,3 +60,5 @@ export const SuccessResponse = (request: Request, response: Response, data? : an
 
 export const RESOLUTIONS_TABLE_NAME = 'resolutions';
 export const COUNTRIES_TABLE_NAME = 'countries';
+export const USERS_TABLE_NAME = 'users';
+export const ORGANIZATION_TABLE_NAME = 'organisations';

@@ -21,12 +21,12 @@ const poolDetails = {
 
 const pool = mariadb.createPool(poolDetails);
 
-const runQuery = async (query: string) => {
+const runQuery = async (query: string, parameters?: any[]) => {
     let connection;
     let res;
     try {
         connection = await pool.getConnection();
-        res = await connection.query(query);
+        res = await connection.query(query, parameters);
         return res
     } catch (err) {
         throw err;
