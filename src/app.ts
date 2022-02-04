@@ -1,13 +1,13 @@
 import * as bodyParser from 'body-parser';
 import * as express from 'express';
+import * as cookieParser from 'cookie-parser';
 import errorMiddleware from './middlewares/error.middleware';
 import loggerMiddleware from './middlewares/logger.middleware'
-import RoutersI from './interfaces/router.interface';
-
+import routes from './routes'
 class App {
   public app: express.Application;
 
-  constructor(routes: RoutersI[]) {
+  constructor() {
     this.app = express();
 
     this.initializeMiddleware();
@@ -28,21 +28,15 @@ class App {
   private initializeMiddleware() {
     this.app.use(bodyParser.json());
     this.app.use(loggerMiddleware)
+    this.app.use(cookieParser());
   }
 
   private initializeErrorHandling() {
     this.app.use(errorMiddleware);
   }
 
-  private initializeRouters(routes: RoutersI[]) {
-    routes.forEach((route) => {
-      this.app.use('/', route.router);
-    });
-
-    this.app.use(function (req, res) {
-      // res.status(404).render('404.jade');
-      res.status(404).json({ message: 'Route  not found', status: 404 });
-    });
+  private initializeRouters(router: express.Router) {
+    this.app.use('/', router)
   }
 }
 

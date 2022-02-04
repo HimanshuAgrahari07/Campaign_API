@@ -27,7 +27,7 @@ export const GenericError = {
         error: {
             status: 404,
             message: 'Requested resource not found',
-            statusText: status.SUCCESS,
+            statusText: status.FAIL,
             errorCode: 'NOT_FOUND',
         }
     },
@@ -62,3 +62,6 @@ export const RESOLUTIONS_TABLE_NAME = 'resolutions';
 export const COUNTRIES_TABLE_NAME = 'countries';
 export const USERS_TABLE_NAME = 'users';
 export const ORGANIZATION_TABLE_NAME = 'organisations';
+export const CONTENT_TABLE_NAME = 'contents';
+export const CAMPAIGN_TABLE_NAME = 'campaigns';
+export const DEVICES_TABLE_NAME = 'devices';
