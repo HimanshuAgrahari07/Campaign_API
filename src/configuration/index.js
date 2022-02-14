@@ -1,5 +1,6 @@
 module.exports = {
     port: process.env.PORT || 3001,
+    baseUrl: `http://localhost:3001`,
     jwt: {
         user: {
             secret:
@@ -36,9 +37,7 @@ module.exports = {
     },
     filesConfig: {
         contents: {
-            // path: process.env.CONTENTS_PATH || "../../public/contents",
-            uniquePrefix: Date.now() + '--' + Math.round(Math.random() * 1E9),
-            uniqueSuffix: '',
+            path: process.env.CONTENTS_PATH || `./public/contents/upload/`,
         }
-    }
+    },
 };

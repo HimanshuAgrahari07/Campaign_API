@@ -26,6 +26,10 @@ router.use("/signup", signup);
 import organisation from "./organisations";
 router.use("/organisation", organisation);
 
+// Contents
+import content from "./no-auth/content";
+router.use("/content", content);
+
 // no route found
 router.use("/", function (req, res) {
     // res.status(404).render('404.jade');

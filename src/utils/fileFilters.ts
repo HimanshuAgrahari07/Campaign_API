@@ -5,13 +5,15 @@ import * as path from "path";
 const acceptableMimeTypesImages = ["image/png", "image/jpg", "image/jpeg"];
 const acceptableExtensionsImages = [".png", ".jpg", ".jpeg"];
 
-export function fileFilterImage(req: Request, file: any, cb: NextFunction) {
+// Not working properly
+export function fileFilterImage(req: Request, file: any, cb: any) {
   console.log(`file >>> `, file)
-  if (
-    acceptableMimeTypesImages.includes(file.mimetype) ||
+  const isValidFileType = acceptableMimeTypesImages.includes(file.mimetype) ||
     acceptableExtensionsImages.includes(path.extname(file.originalname))
-  ) {
-    cb();
+
+  console.log('isValidFileType >> ', isValidFileType)
+  if (isValidFileType) {
+    cb(null, true);
   } else {
     cb(new Error("Invalid file"));
   }

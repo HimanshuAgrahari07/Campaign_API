@@ -112,6 +112,53 @@ export const getOrganisationById = async (id: number) => {
 
 // Contents
 import { CONTENT_TABLE_NAME } from '../utils/const'
+
+export const createContent = async ({
+    organisationId,
+    contentName,
+    contentDescription,
+    fileType,
+    fileSize,
+    downloadUrl,
+    fileName,
+    filePath,
+}: {
+    organisationId: number;
+    contentName: string;
+    contentDescription: string;
+    fileType: string;
+    fileSize: number;
+    downloadUrl: string;
+    fileName: string;
+    filePath: string;
+}) => {
+
+    const query = `INSERT INTO ${CONTENT_TABLE_NAME}
+    (
+        organisationId,
+        contentName,
+        contentDescription,
+        fileType,
+        fileSize,
+        downloadUrl,
+        fileName,
+        filePath
+    )
+    VALUES
+    (
+        '${organisationId}',
+        '${contentName}',
+        '${contentDescription}',
+        '${fileType}',
+        '${fileSize}',
+        '${downloadUrl}',
+        '${fileName}',
+        '${filePath}'
+    );
+    `
+    return await runQuery(query)
+}
+
 /**
  * 
  * @param contentId campaigns id for which we want to query
@@ -227,7 +274,7 @@ export const createCampaign = async ({
 
         await Promise.all(devices.map(deviceId => insertCampaignToDevice(createdCampaignId, deviceId)))
         await Promise.all(contents.map(contentId => insertCampaignToContents(createdCampaignId, contentId)))
-        
+
         return [createdCampaign]
     }
 
@@ -328,15 +375,15 @@ const insertCampaignToDevice = async (campaignId: number, deviceId: number) => {
  *                          Campaign To CONTENTS
  * ****************************************************************
  */
- import { CAMPAIGN_TO_CONTENTS } from '../utils/const'
- const insertCampaignToContents = async (campaignId: number, contentsId: number) => {
-     if (!(contentsId && campaignId)) return;
- 
-     /**
-      * A ---> Campaign id
-      * B ---> Device id
-      */
-     const query = `INSERT INTO ${CAMPAIGN_TO_CONTENTS}
+import { CAMPAIGN_TO_CONTENTS } from '../utils/const'
+const insertCampaignToContents = async (campaignId: number, contentsId: number) => {
+    if (!(contentsId && campaignId)) return;
+
+    /**
+     * A ---> Campaign id
+     * B ---> Device id
+     */
+    const query = `INSERT INTO ${CAMPAIGN_TO_CONTENTS}
                      (
                          A,
                          B
@@ -346,5 +393,5 @@ const insertCampaignToDevice = async (campaignId: number, deviceId: number) => {
                          '${campaignId}',
                          '${contentsId}'
                      );`
-     return await runQuery(query)
- }
+    return await runQuery(query)
+}
