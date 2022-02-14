@@ -6,17 +6,20 @@ import { IUser, IHydrateUser } from '../../interfaces/index'
 import { IHydrateUserParameters } from '../../interfaces';
 
 export default async (params: IHydrateUserParameters) => {
-    const validValues = Object.entries(params).filter(e => e[0])
-    const where = validValues.map(e => `${e[0]}='${e[1]}'`).join(' OR ')
+    const { email, id, mobile } = params;
 
-    const userDetails = await runQuery(`SELECT * 
-                                    FROM ${USERS_TABLE_NAME || 'users'}
-                                    WHERE ${where};`);
+    const validValues = Object.entries({ email, id, mobile }).filter(e => e[1])
+    const where = validValues.map(e => `${e[0]}='${e[1]}'`).join(' AND ')
+
+    const query = `SELECT * 
+    FROM ${USERS_TABLE_NAME || 'users'}
+    WHERE ${where};`
+
+    const userDetails = await runQuery(query);
     const userDetail: any = userDetails[0];
 
 
     /******** Get organisations */
-
     const organisationId = userDetail.organisationId;
     const organization = await runQuery(`SELECT * 
                                     FROM ${ORGANIZATION_TABLE_NAME || 'organisations'}

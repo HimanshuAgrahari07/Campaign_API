@@ -25,7 +25,7 @@ export const createOne = async (request: Request, response: Response, next: Next
     /**@ts-ignore */
     const hydratedUser: IHydrateUser = request.hydratedUser
     const organisation = hydratedUser.organisation
-    
+
     const {
         campaignName,
         campaignDescription = '',
@@ -55,11 +55,25 @@ export const createOne = async (request: Request, response: Response, next: Next
         uid: nextUid
     }
 
-    await Services.createNew(params).catch(err => next(new HttpException(err.message)));
-    const hydratedCampaign = await hydratorCampaign(nextUid)
+    const createdCampaign = await Services.createNew(params).catch(err => {
+        console.error(err)
+        next(new HttpException(err.message))
+    });
+    const hydratedCampaign = await hydratorCampaign({ campaignRecord: createdCampaign, organizationRecord: organisation, uid: nextUid, contents, devices })
 
-    if (hydratedCampaign.length) {
+    if (hydratedCampaign) {
         SuccessResponse(request, response, hydratedCampaign)
     }
+}
 
+import { getAllList } from './services';
+export const getAll = async (request: Request, response: Response, next: NextFunction) => {
+    const orgId = parseInt(request.params.orgId)
+    const allCampaigns = await getAllList(orgId)
+    // const hydratedAllCampaign = await Promise.all(
+    //     allCampaigns.map(async(campaign: any) => await hydratorCampaign({ campaignRecord: campaign, uid: campaign.uid, contents, devices }))
+    // )
+    if (allCampaigns) {
+        SuccessResponse(request, response, allCampaigns)
+    }
 }

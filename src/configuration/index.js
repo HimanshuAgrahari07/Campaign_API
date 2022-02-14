@@ -34,5 +34,11 @@ module.exports = {
             maxConnections: process.env.DB_MAX_CONNECTIONS || 5
         },
     },
-    dateFormat: 'MM/DD/YYYY'
+    filesConfig: {
+        contents: {
+            // path: process.env.CONTENTS_PATH || "../../public/contents",
+            uniquePrefix: Date.now() + '--' + Math.round(Math.random() * 1E9),
+            uniqueSuffix: '',
+        }
+    }
 };

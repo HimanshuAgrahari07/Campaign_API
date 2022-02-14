@@ -65,3 +65,5 @@ export const ORGANIZATION_TABLE_NAME = 'organisations';
 export const CONTENT_TABLE_NAME = 'contents';
 export const CAMPAIGN_TABLE_NAME = 'campaigns';
 export const DEVICES_TABLE_NAME = 'devices';
+export const CAMPAIGN_TO_DEVICES = '_CampaignToDevice';
+export const CAMPAIGN_TO_CONTENTS = '_CampaignToContent';

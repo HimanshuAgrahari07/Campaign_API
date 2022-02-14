@@ -1,9 +1,8 @@
+
 import { Router, NextFunction, Request, Response } from 'express';
-import { createError, ErrorType } from '../../../errors/createError';
-import { getOrganisationById } from '../../../database/DBQuery';
-import validationMiddleware from '../../../middlewares/validation.middleware'
-import CampaignDto from './campaign.dto'
-import * as controller from './controller';
+import { getOrganisationById } from '../../database/DBQuery'
+import addUserDetails from "../../middlewares/addUserDetails"
+import authenticate from "../../middlewares/authenticate.middleware"
 
 function checkIfParameterExists(request: Request, response: Response, next: NextFunction) {
     const queryFunctions: any = {
@@ -25,9 +24,20 @@ function checkIfParameterExists(request: Request, response: Response, next: Next
 
 const router = Router({ mergeParams: true });
 
-// helper function
-router.post("", validationMiddleware(CampaignDto, false), checkIfParameterExists, controller.createOne)
+// Organizations
+import organisation from "./../no-auth/organisations";
+router.use("/", organisation);
 
-router.get("", controller.getAll)
+// CAMPAIGNS
+import campaign from "../authentication/campaign";
+router.use("/:orgId(\\d+)/campaigns", checkIfParameterExists, authenticate, addUserDetails, campaign);
+
+// CONTENTS
+// TODO: Add authenticate, addUserDetails
+import contents from "../authentication/contents";
+router.use("/:orgId(\\d+)/contents", checkIfParameterExists,
+    // authenticate,
+    // addUserDetails,
+    contents);
 
 export default router;
