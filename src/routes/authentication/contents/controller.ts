@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { SuccessResponse, GenericError } from '../../../utils/const';
 import HttpException from '../../../exceptions/HttpException';
-import { createContent, getContentById } from '../../../database/DBQuery'
 import { byteToMb } from '../../../utils/helper'
+import * as services from './services'
 // @ts-ignore
 import * as config from '../../../configuration';
 
@@ -24,11 +24,9 @@ export const createOne = async (request: any, response: Response, next: NextFunc
             filePath: file.path
         }
 
-        const responseFromDB = await createContent(contentsParams);
-        const insertId = responseFromDB.insertId
-        const data = await getContentById(insertId, orgId);
+        const data = await services.createNew(contentsParams);
 
-        if (responseFromDB) {
+        if (data) {
             SuccessResponse(request, response, data)
         }
     } catch (error) {
@@ -36,14 +34,22 @@ export const createOne = async (request: any, response: Response, next: NextFunc
     }
 }
 
-import { getAllList } from './services';
+
 export const getAll = async (request: Request, response: Response, next: NextFunction) => {
     const orgId = parseInt(request.params.orgId)
-    const allCampaigns = await getAllList(orgId)
-    // const hydratedAllCampaign = await Promise.all(
-    //     allCampaigns.map(async(campaign: any) => await hydratorCampaign({ campaignRecord: campaign, uid: campaign.uid, contents, devices }))
-    // )
-    if (allCampaigns) {
-        SuccessResponse(request, response, allCampaigns)
+    const allContents = await services.getAllList(orgId)
+
+    if (allContents) {
+        SuccessResponse(request, response, allContents)
+    }
+}
+
+export const getOne = async (request: Request, response: Response, next: NextFunction) => {
+    const orgId = parseInt(request.params.orgId)
+    const contentId = parseInt(request.params.id)
+    const content = await services.getOne(orgId, contentId)
+
+    if (content) {
+        SuccessResponse(request, response, content)
     }
 }

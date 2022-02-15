@@ -5,7 +5,6 @@ import * as path from "path";
 const acceptableMimeTypesImages = ["image/png", "image/jpg", "image/jpeg"];
 const acceptableExtensionsImages = [".png", ".jpg", ".jpeg"];
 
-// Not working properly
 export function fileFilterImage(req: Request, file: any, cb: any) {
   console.log(`file >>> `, file)
   const isValidFileType = acceptableMimeTypesImages.includes(file.mimetype) ||

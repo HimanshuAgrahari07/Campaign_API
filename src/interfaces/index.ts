@@ -1,3 +1,5 @@
+import { Router } from 'express';
+
 export type RequireOnlyOne<T, Keys extends keyof T = keyof T> =
     Pick<T, Exclude<keyof T, Keys>>
     & {
@@ -22,6 +24,11 @@ export interface IOrganisation {
     id?: number;
     createdAt?: string;
     updatedAt?: string;
+}
+
+export interface RoutersI {
+    path?: string
+    router: Router
 }
 
 export interface ICountry {
@@ -89,6 +96,10 @@ export interface IContent {
     filePath: string;
     createdAt: string;
     updatedAt: string;
+}
+
+export interface IContentWithOrganisation extends IContent {
+    organisation: IOrganisation;
 }
 
 // CAMPAIGNS

@@ -22,11 +22,9 @@ router.use("/countries", countries);
 import signup from "./no-auth/sign-up";
 router.use("/signup", signup);
 
-// Organizations
 import organisation from "./organisations";
 router.use("/organisation", organisation);
 
-// Contents
 import content from "./no-auth/content";
 router.use("/content", content);
 

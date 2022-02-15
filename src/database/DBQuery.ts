@@ -9,7 +9,13 @@ const getWhereQuery = (valuesObject: any, joinBy?: 'AND' | 'OR') => {
     return where
 }
 
-// User
+
+
+/**
+ * ****************************************************************
+ *                          USERS
+ * ****************************************************************
+ */
 import { USERS_TABLE_NAME } from '../utils/const'
 export const getUser = async ({ userId, email, mobile }: { userId?: number, email?: string, mobile?: string }) => {
     if (!(userId || email || mobile)) return; // if none provided, return
@@ -68,7 +74,13 @@ export async function addNewUser({
     return await runQuery(queryString)
 }
 
-// Organisation
+
+
+/**
+ * ****************************************************************
+ *                          ORGANISATIONS
+ * ****************************************************************
+ */
 import { ORGANIZATION_TABLE_NAME } from '../utils/const'
 
 export const insertNewOrganisation = async (param: IOrganisation) => {
@@ -99,7 +111,7 @@ export const getOrganisation = async (param: IOrganisation) => {
     return await runQuery(query)
 }
 
-export const getOrganisationById = async (id: number) => {
+export const getOrganisationById = async (id: number): Promise<IOrganisation[]> => {
     if (!id) return; // if none provided, return
 
     const where = getWhereQuery({ id }, 'OR')
@@ -110,9 +122,16 @@ export const getOrganisationById = async (id: number) => {
     return await runQuery(query)
 }
 
-// Contents
-import { CONTENT_TABLE_NAME } from '../utils/const'
 
+
+
+/**
+ * ****************************************************************
+ *                          CONTENTS
+ * ****************************************************************
+ */
+import { CONTENT_TABLE_NAME } from '../utils/const'
+import { IContent } from '../interfaces/index'
 export const createContent = async ({
     organisationId,
     contentName,
@@ -161,50 +180,46 @@ export const createContent = async ({
 
 /**
  * 
- * @param contentId campaigns id for which we want to query
- * @param organisationId Orgs id for which we want to query campaign
- * @returns contents details for the given campaigns id within an orgs
+ * @param contentId contents id for which we want to query
+ * @param organisationId? Orgs id for which we want to query contents
+ * @returns contents details for the given contents id within an orgs
  */
-export const getContentById = async (contentId: number, organisationId: number) => {
+export const getContentById = async (contentId: number, organisationId?: number): Promise<IContent[]> => {
     if (!(contentId && organisationId)) return; // if none provided, return
 
-    const where = getWhereQuery({ id: contentId }, 'OR')
+    const where = getWhereQuery({ id: contentId, organisationId }, 'AND')
 
     const query = `SELECT *
                    FROM ${CONTENT_TABLE_NAME}
                    WHERE ${where}
-                   AND organisationId = '${organisationId}'
                    ;`
     return await runQuery(query)
 }
 
 /**
  * 
- * @param contentIdArray Array of campaigns id for which we want to query. Ex [1,3]
- * @param organisationId Orgs id for which we want to query campaign
+ * @param contentIdArray Array of contents id for which we want to query. Ex [1,3]
+ * @param organisationId Orgs id for which we want to query contents
  * @returns List of contents
  */
-export const getContentsList = async (contentIdArray: number[], organisationId: number) => {
-    if (!(contentIdArray.length && organisationId)) return; // if none provided, return
+export const getContentsList = async (contentIdArray: number[], organisationId?: number): Promise<IContent[]>=> {
+    if (!(contentIdArray.length)) return; // if none provided, return
 
-    // const partialStr = contentIdArray.filter(Boolean).join('\', ')
-    const partialStr = contentIdArray.filter(Boolean)
-    console.log('partialStr >>> ', partialStr)
     const query = `SELECT *
                    FROM ${CONTENT_TABLE_NAME}
                    WHERE id in (${contentIdArray})
-                   AND organisationId = '${organisationId}'
+                   ${organisationId ? `AND organisationId = '${organisationId}'` : ''}
                    ;`;
-    console.log('query >>> ', query)
+
     return await runQuery(query)
 }
 
 /**
  * 
- * @param organisationId Orgs id for which we want to query campaign
+ * @param organisationId Orgs id for which we want to query contents
  * @returns List of contents
  */
-export const getAllContentsListForAnOrganisation = async (organisationId: number) => {
+export const getAllContentsListForAnOrganisation = async (organisationId: number): Promise<IContent[]> => {
     if (!organisationId) return; // if none provided, return
 
     const query = `SELECT *
@@ -214,7 +229,17 @@ export const getAllContentsListForAnOrganisation = async (organisationId: number
     return await runQuery(query)
 }
 
-// CAMPAIGNS
+
+
+
+
+
+
+/**
+ * ****************************************************************
+ *                          CAMPAIGNS
+ * ****************************************************************
+ */
 import { CAMPAIGN_TABLE_NAME } from '../utils/const'
 /**
  * 

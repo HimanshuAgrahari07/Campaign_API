@@ -6,7 +6,7 @@ import authenticate from "../../middlewares/authenticate.middleware"
 
 function checkIfParameterExists(request: Request, response: Response, next: NextFunction) {
     const queryFunctions: any = {
-        orgId: getOrganisationById
+        orgId: getOrganisationById,
     }
 
     Object.keys(request.params).forEach(async (param) => {
@@ -30,14 +30,18 @@ router.use("/", organisation);
 
 // CAMPAIGNS
 import campaign from "../authentication/campaign";
-router.use("/:orgId(\\d+)/campaigns", checkIfParameterExists, authenticate, addUserDetails, campaign);
+router.use("/:orgId(\\d+)/campaigns",
+    checkIfParameterExists,
+    authenticate,
+    addUserDetails,
+    campaign);
 
 // CONTENTS
-// TODO: Add authenticate, addUserDetails
 import contents from "../authentication/contents";
-router.use("/:orgId(\\d+)/contents", checkIfParameterExists,
-    // authenticate,
-    // addUserDetails,
+router.use("/:orgId(\\d+)/contents",
+    checkIfParameterExists,
+    authenticate,
+    addUserDetails,
     contents);
 
 export default router;
