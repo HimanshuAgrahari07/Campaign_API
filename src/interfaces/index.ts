@@ -83,17 +83,20 @@ export interface IDevice {
 }
 
 // CONTENT
-export interface IContent {
-    id: number;
+
+export interface IBasicContent {
     organisationId: number;
     contentName: string;
     contentDescription: string;
     fileType: string;
     fileSize: number;
     downloadUrl: string;
-    streamUrl: string | null;
     fileName: string;
     filePath: string;
+}
+export interface IContent extends IBasicContent {
+    id: number;
+    streamUrl: string | null;
     createdAt: string;
     updatedAt: string;
 }

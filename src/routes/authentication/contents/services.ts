@@ -34,3 +34,20 @@ export const getOne = async (organisationId: number, contentId: number): Promise
     const hydratedContent = await hydratorsContentsWithOrgs({ organisationId, contents: liteContents })
     return hydratedContent[0]
 }
+
+export const updateOne = async (contentId: number, params: {
+    organisationId: number;
+    contentName: string;
+    contentDescription: string;
+    fileType: string;
+    fileSize: number;
+    downloadUrl: string;
+    fileName: string;
+    filePath: string;
+}) => {
+    const responseFromDB = await query.updateContent(contentId, params);
+    if(responseFromDB.affectedRows !== 1) return {} as IContentWithOrganisation
+
+    const data = await query.getContentById(contentId, params.organisationId);
+    return data
+}

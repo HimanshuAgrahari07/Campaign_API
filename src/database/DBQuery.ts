@@ -131,7 +131,8 @@ export const getOrganisationById = async (id: number): Promise<IOrganisation[]> 
  * ****************************************************************
  */
 import { CONTENT_TABLE_NAME } from '../utils/const'
-import { IContent } from '../interfaces/index'
+import { IContent, IBasicContent } from '../interfaces/index'
+
 export const createContent = async ({
     organisationId,
     contentName,
@@ -141,16 +142,7 @@ export const createContent = async ({
     downloadUrl,
     fileName,
     filePath,
-}: {
-    organisationId: number;
-    contentName: string;
-    contentDescription: string;
-    fileType: string;
-    fileSize: number;
-    downloadUrl: string;
-    fileName: string;
-    filePath: string;
-}) => {
+}: IBasicContent) => {
 
     const query = `INSERT INTO ${CONTENT_TABLE_NAME}
     (
@@ -202,7 +194,7 @@ export const getContentById = async (contentId: number, organisationId?: number)
  * @param organisationId Orgs id for which we want to query contents
  * @returns List of contents
  */
-export const getContentsList = async (contentIdArray: number[], organisationId?: number): Promise<IContent[]>=> {
+export const getContentsList = async (contentIdArray: number[], organisationId?: number): Promise<IContent[]> => {
     if (!(contentIdArray.length)) return; // if none provided, return
 
     const query = `SELECT *
@@ -226,6 +218,17 @@ export const getAllContentsListForAnOrganisation = async (organisationId: number
                    FROM ${CONTENT_TABLE_NAME}
                    WHERE organisationId = '${organisationId}'
                    ;`;
+    return await runQuery(query)
+}
+
+export const updateContent = async (contentNumber: number, params: IBasicContent) => {
+    const requiredData = Object.entries(params).filter(e => e[1])
+    const queryString = requiredData.map(e => `${e[0]}='${e[1]}'`).join(', ')
+
+    const query = `UPDATE ${CONTENT_TABLE_NAME}
+                    SET ${queryString}
+                    WHERE id = ${contentNumber};`;
+    
     return await runQuery(query)
 }
 

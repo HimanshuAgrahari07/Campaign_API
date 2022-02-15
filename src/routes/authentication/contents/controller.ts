@@ -34,7 +34,6 @@ export const createOne = async (request: any, response: Response, next: NextFunc
     }
 }
 
-
 export const getAll = async (request: Request, response: Response, next: NextFunction) => {
     const orgId = parseInt(request.params.orgId)
     const allContents = await services.getAllList(orgId)
@@ -51,5 +50,34 @@ export const getOne = async (request: Request, response: Response, next: NextFun
 
     if (content) {
         SuccessResponse(request, response, content)
+    }
+}
+
+export const updateOne = async (request: any, response: Response, next: NextFunction) => {
+    try {
+        const orgId = parseInt(request.params.orgId)
+        const contentId = parseInt(request.params.id)
+
+        const { contentName, contentDescription } = request.body;
+        const file = request.file;
+
+        const contentsParams = {
+            organisationId: orgId,
+            contentName,
+            contentDescription,
+            fileType: file.mimetype,
+            fileSize: file.size,
+            downloadUrl: `${config.baseUrl}/content/download/${file.filename}`,
+            fileName: file.filename,
+            filePath: file.path
+        }
+
+        const data = await services.updateOne(contentId, contentsParams);
+
+        if (data) {
+            SuccessResponse(request, response, data)
+        }
+    } catch (error) {
+        next(new HttpException({ ...GenericError.ServerError.error, message: error.message }))
     }
 }

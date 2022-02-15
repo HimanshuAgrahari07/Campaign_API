@@ -15,4 +15,9 @@ router.get("/", controller.getAll)
 // get one contents
 router.get("/:id(\\d+)", controller.getOne)
 
+// update
+router.put("/:id(\\d+)",
+    upload('contents').single('attachment'),
+    controller.updateOne)
+
 export default router;
