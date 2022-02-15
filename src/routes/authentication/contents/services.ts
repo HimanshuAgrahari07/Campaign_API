@@ -2,6 +2,8 @@ import * as query from '../../../database/DBQuery'
 import hydratorsContentsWithOrgs from '../../../lib/hydrators/hydratorsContentsWithOrgs';
 import hydratorsContentLite from '../../../lib/hydrators/hydratorsContentLite';
 import { IContent, IContentWithOrganisation } from 'interfaces';
+import * as fileHandling from './../../../utils/fileHandling';
+import { createError, ErrorType } from '../../../errors/createError';
 
 
 export const createNew = async (params: {
@@ -46,8 +48,19 @@ export const updateOne = async (contentId: number, params: {
     filePath: string;
 }) => {
     const responseFromDB = await query.updateContent(contentId, params);
-    if(responseFromDB.affectedRows !== 1) return {} as IContentWithOrganisation
+    if (responseFromDB.affectedRows !== 1) return {} as IContentWithOrganisation
 
     const data = await query.getContentById(contentId, params.organisationId);
     return data
+}
+
+export const deleteOne = async (contentId: number) => {
+    const contents = await query.getContentById(contentId);
+    if (contents.length === 0) throw createError(ErrorType.RESOURCE_NOT_FOUND)
+
+    const filePath = contents[0].filePath
+    await fileHandling.deleteFile(filePath)
+
+    const deleteResponseFromDB = await query.deleteContent(contentId);
+    return deleteResponseFromDB.affectedRows === 1 ? true : false;
 }

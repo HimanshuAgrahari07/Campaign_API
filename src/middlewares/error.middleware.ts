@@ -6,7 +6,7 @@ function errorMiddleware(error: HttpException, request: Request, response: Respo
     const status: number = error.status || 500;
     const message: string = error.message || 'Something went wrong';
     console.error(`[${request.method}] ${request.path} >> StatusCode :: ${status}, Message: ${message}`);
-    
+    console.error(error.stack);
     response
       .status(status)
       .send(error);

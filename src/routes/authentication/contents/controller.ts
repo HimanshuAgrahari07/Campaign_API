@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { SuccessResponse, GenericError } from '../../../utils/const';
 import HttpException from '../../../exceptions/HttpException';
-import { byteToMb } from '../../../utils/helper'
 import * as services from './services'
 // @ts-ignore
 import * as config from '../../../configuration';
+import { errorEnums } from '../../../errors/createError';
 
 export const createOne = async (request: any, response: Response, next: NextFunction) => {
     try {
@@ -79,5 +79,23 @@ export const updateOne = async (request: any, response: Response, next: NextFunc
         }
     } catch (error) {
         next(new HttpException({ ...GenericError.ServerError.error, message: error.message }))
+    }
+}
+
+export const deleteOne = async (request: any, response: Response, next: NextFunction) => {
+    try {
+        const orgId = parseInt(request.params.orgId)
+        const contentId = parseInt(request.params.id)
+
+        const data = await services.deleteOne(contentId)
+        if (data) {
+            SuccessResponse(request, response, data)
+        }
+    } catch (error) {
+        if(error.enum == errorEnums.RESOURCE_NOT_FOUND) {
+            next(error)
+        } else {
+            next(new HttpException({ ...GenericError.ServerError.error, message: error.message }))
+        }
     }
 }

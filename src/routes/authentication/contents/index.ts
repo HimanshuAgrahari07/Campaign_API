@@ -20,4 +20,8 @@ router.put("/:id(\\d+)",
     upload('contents').single('attachment'),
     controller.updateOne)
 
+// update
+router.delete("/:id(\\d+)",
+    controller.deleteOne)
+
 export default router;

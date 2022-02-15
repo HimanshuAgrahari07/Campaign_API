@@ -175,9 +175,11 @@ export const createContent = async ({
  * @param contentId contents id for which we want to query
  * @param organisationId? Orgs id for which we want to query contents
  * @returns contents details for the given contents id within an orgs
+ * 
+ * Even if it returns single row, it will return array of one row
  */
 export const getContentById = async (contentId: number, organisationId?: number): Promise<IContent[]> => {
-    if (!(contentId && organisationId)) return; // if none provided, return
+    if (!(contentId)) return; // return
 
     const where = getWhereQuery({ id: contentId, organisationId }, 'AND')
 
@@ -232,6 +234,13 @@ export const updateContent = async (contentNumber: number, params: IBasicContent
     return await runQuery(query)
 }
 
+export const deleteContent = async (contentNumber: number) => {
+
+    const query = `DELETE FROM ${CONTENT_TABLE_NAME}
+                    WHERE id = ${contentNumber};`;
+    
+    return await runQuery(query)
+}
 
 
 
