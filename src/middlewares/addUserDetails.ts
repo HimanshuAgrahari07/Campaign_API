@@ -5,22 +5,25 @@ import { GenericError } from '../utils/const'
 import { USERS_TABLE_NAME } from '../utils/const'
 import runQuery from '../database/Database'
 import hydrateUser from '../lib/hydrators/hydratorsUser'
+import { getUser } from '../database/DBQuery';
 
 export default async (req: Request, res: Response, next: NextFunction) => {
     /** @ts-ignore */
     const { decodedUserInfo } = req;
     console.log('[[decodedUserInfo]] >>>> ', decodedUserInfo)
+    const { email } = decodedUserInfo;
     
     let record: any;
 
     try {
-        const validValues = Object.entries(decodedUserInfo).filter(e => e[0])
-        const where = validValues.map(e => `${e[0]}='${e[1]}'`).join(' OR ')
-        const query = `SELECT * 
-                    FROM ${USERS_TABLE_NAME || 'users'}
-                    WHERE ${where};`
+        // const validValues = Object.entries(decodedUserInfo).filter(e => e[0])
+        // const where = validValues.map(e => `${e[0]}='${e[1]}'`).join(' OR ')
+        // const query = `SELECT * 
+        //             FROM ${USERS_TABLE_NAME || 'users'}
+        //             WHERE ${where};`
 
-        const userDetails = await runQuery(query);
+        // const userDetails = await runQuery(query);
+        const userDetails = await getUser({ email })
 
         if (!userDetails.length) throw new Error(`No user exists with given token`)
 

@@ -1,5 +1,6 @@
 module.exports = {
     port: process.env.PORT || 3001,
+    baseUrl: `http://localhost:3001`,
     jwt: {
         user: {
             secret:
@@ -34,5 +35,9 @@ module.exports = {
             maxConnections: process.env.DB_MAX_CONNECTIONS || 5
         },
     },
-    dateFormat: 'MM/DD/YYYY'
+    filesConfig: {
+        contents: {
+            path: process.env.CONTENTS_PATH || `./public/contents/upload/`,
+        }
+    },
 };

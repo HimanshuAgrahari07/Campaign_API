@@ -1,6 +1,7 @@
 import * as express from "express";
 import addUserDetails from "../middlewares/addUserDetails"
 import authenticate from "../middlewares/authenticate.middleware"
+const path = require("path");
 // routers
 
 const router = express.Router();
@@ -22,12 +23,12 @@ import signup from "./no-auth/sign-up";
 router.use("/signup", signup);
 
 // Organizations
-import organisation from "./no-auth/organisations";
+import organisation from "./organisations";
 router.use("/organisation", organisation);
 
-// CAMPAIGNS
-import campaign from "./authentication/campaign";
-router.use("/organisation/:orgId(\\d+)/campaigns", authenticate, addUserDetails, campaign);
+// Contents
+import content from "./no-auth/content";
+router.use("/content", content);
 
 // no route found
 router.use("/", function (req, res) {

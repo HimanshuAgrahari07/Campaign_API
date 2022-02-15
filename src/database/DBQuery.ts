@@ -112,6 +112,53 @@ export const getOrganisationById = async (id: number) => {
 
 // Contents
 import { CONTENT_TABLE_NAME } from '../utils/const'
+
+export const createContent = async ({
+    organisationId,
+    contentName,
+    contentDescription,
+    fileType,
+    fileSize,
+    downloadUrl,
+    fileName,
+    filePath,
+}: {
+    organisationId: number;
+    contentName: string;
+    contentDescription: string;
+    fileType: string;
+    fileSize: number;
+    downloadUrl: string;
+    fileName: string;
+    filePath: string;
+}) => {
+
+    const query = `INSERT INTO ${CONTENT_TABLE_NAME}
+    (
+        organisationId,
+        contentName,
+        contentDescription,
+        fileType,
+        fileSize,
+        downloadUrl,
+        fileName,
+        filePath
+    )
+    VALUES
+    (
+        '${organisationId}',
+        '${contentName}',
+        '${contentDescription}',
+        '${fileType}',
+        '${fileSize}',
+        '${downloadUrl}',
+        '${fileName}',
+        '${filePath}'
+    );
+    `
+    return await runQuery(query)
+}
+
 /**
  * 
  * @param contentId campaigns id for which we want to query
@@ -140,12 +187,15 @@ export const getContentById = async (contentId: number, organisationId: number) 
 export const getContentsList = async (contentIdArray: number[], organisationId: number) => {
     if (!(contentIdArray.length && organisationId)) return; // if none provided, return
 
-    const partialStr = contentIdArray.filter(Boolean).join('\', ')
+    // const partialStr = contentIdArray.filter(Boolean).join('\', ')
+    const partialStr = contentIdArray.filter(Boolean)
+    console.log('partialStr >>> ', partialStr)
     const query = `SELECT *
                    FROM ${CONTENT_TABLE_NAME}
-                   WHERE id in ('${partialStr}')
+                   WHERE id in (${contentIdArray})
                    AND organisationId = '${organisationId}'
                    ;`;
+    console.log('query >>> ', query)
     return await runQuery(query)
 }
 
@@ -164,36 +214,12 @@ export const getAllContentsListForAnOrganisation = async (organisationId: number
     return await runQuery(query)
 }
 
-// export const createNewCampaign = async () {
-//     `INSERT INTO contents
-//     (   
-//         organisationId,
-//         contentName,
-//         contentDescription,
-//         fileType,
-//         fileSize,
-//         downloadUrl,
-//         streamUrl,
-//         fileName,
-//         filePath,
-//         createdAt,
-//         updatedAt
-//     )
-//     VALUES
-//     (   
-//         28,
-//         'Test'
-//     );
-//     `
-// }
-
 // CAMPAIGNS
 import { CAMPAIGN_TABLE_NAME } from '../utils/const'
-import { getLocalStrTime } from '../utils/helper'
 /**
  * 
  * @param param0 Object of type @ICampaign
- * @returns true if success
+ * @returns array of campaigns created
  * @throws error if not success
  */
 export const createCampaign = async ({
@@ -204,77 +230,60 @@ export const createCampaign = async ({
     campaignStatus,
     startDate,
     endDate,
-    campaignFrequency
+    campaignFrequency,
+    devices,
+    contents
 }: ICampaign) => {
-    // const {
-    //     organisationId,
-    //     campaignName,
-    //     campaignDescription,
-    //     uid,
-    //     campaignStatus,
-    //     startDate,
-    //     endDate,
-    //     campaignFrequency
-    // } = params
+    if (!(organisationId && campaignName && uid && campaignStatus && startDate && endDate && campaignFrequency)) return; // if none provided, return
 
-    // if (! (
-    //     organisationId
-    //     && campaignName
-    //     && campaignDescription
-    //     && uid
-    //     && campaignStatus
-    //     && startDate
-    //     && endDate
-    //     && campaignFrequency 
-    // )) return; // if none provided, return
-
-    const query = `INSERT INTO campaigns
-                    (
-                        organisationId,
-                        campaignName,
-                        campaignDescription,
-                        uid,
-                        campaignStatus,
-                        startDate,
-                        endDate,
-                        campaignFrequency
-                    )
-                    VALUES
-                    (
-                        '${organisationId}',
-                        '${campaignName}',
-                        '${campaignDescription}',
-                        '${uid}',
-                        '${campaignStatus}',
-                        'STR_TO_DATE("${getLocalStrTime(startDate)}", "%d/%m/%Y, %k:%i:%s")',
-                        'STR_TO_DATE("${getLocalStrTime(endDate)}", "%d/%m/%Y, %k:%i:%s")',
-                        '${campaignFrequency}'
-                    );
-    `;
-
-    console.log(`query >>>`, query)
-    const response = await runQuery(query)
-    console.log(`response >> `, response)
-    if (response.length) {
-        return getCampaignByAnyColumn({
+    const createNewCampaignQuery = `INSERT INTO ${CAMPAIGN_TABLE_NAME}
+    (
+        organisationId,
+        campaignName,
+        campaignDescription,
+        uid,
+        campaignStatus,
+        startDate,
+        endDate,
+        campaignFrequency
+    )
+    VALUES
+    (
+        '${organisationId}',
+        '${campaignName}',
+        '${campaignDescription}',
+        '${uid}',
+        '${campaignStatus}',
+        DATE_FORMAT(STR_TO_DATE('${startDate}','%Y-%m-%dT%H:%i:%s.000Z'),'%Y-%m-%d %H:%i:%s'),
+        DATE_FORMAT(STR_TO_DATE('${endDate}','%Y-%m-%dT%H:%i:%s.000Z'),'%Y-%m-%d %H:%i:%s'),
+        '${campaignFrequency}'
+    );
+    `
+    const response = await runQuery(createNewCampaignQuery)
+    // update campaign to devices table
+    // await insertCampaignToDevice()
+    if (response.affectedRows === 0) throw new Error('Campaign creation failed');
+    if (response.affectedRows === 1) {
+        const createdCampaigns = await getCampaignByAnyColumn({
             uid,
             organisationId
         }, 'AND')
+
+        const createdCampaign = createdCampaigns[0]
+        const createdCampaignId = createdCampaign.id;
+
+        await Promise.all(devices.map(deviceId => insertCampaignToDevice(createdCampaignId, deviceId)))
+        await Promise.all(contents.map(contentId => insertCampaignToContents(createdCampaignId, contentId)))
+
+        return [createdCampaign]
     }
 
-    return false;
+    return []
 }
 
 export const getCampaignById = async (campaignId: number) => {
     if (!(campaignId)) return; // if none provided, return
-
-    const where = getWhereQuery({ id: campaignId })
-
-    const query = `SELECT *
-                   FROM ${CAMPAIGN_TABLE_NAME}
-                   WHERE ${where}
-                   ;`
-    return await runQuery(query)
+    return getCampaignByAnyColumn({ id: campaignId }, 'AND')
 }
 
 export const getCampaignByAnyColumn = async (columnNameValuePairObj: {}, joinBy?: 'AND' | 'OR') => {
@@ -284,8 +293,13 @@ export const getCampaignByAnyColumn = async (columnNameValuePairObj: {}, joinBy?
                    FROM ${CAMPAIGN_TABLE_NAME}
                    WHERE ${where}
                    ;`
-    const response = await runQuery(query)
-    return response
+    return await runQuery(query)
+}
+
+export const getAllCampaignByOrgId = async (organisationId: number) => {
+    if (!(organisationId)) return; // if none provided, return
+
+    return await getCampaignByAnyColumn({ organisationId }, 'AND')
 }
 
 export const getCampaignCountByOrgId = async (organisationId: number) => {
@@ -323,8 +337,61 @@ export const getDeviceByList = async (deviceIdArray: number[], organisationId: n
     const partialStr = deviceIdArray.filter(Boolean).join('\', ')
     const query = `SELECT *
                    FROM ${DEVICES_TABLE_NAME}
-                   WHERE id in ('${partialStr}')
+                   WHERE id in (${deviceIdArray})
                    AND organisationId = '${organisationId}'
                    ;`;
+    console.log('query >>> ', query)
+    return await runQuery(query)
+}
+
+/**
+ * ****************************************************************
+ *                          Campaign To DEVICES
+ * ****************************************************************
+ */
+import { CAMPAIGN_TO_DEVICES } from '../utils/const'
+const insertCampaignToDevice = async (campaignId: number, deviceId: number) => {
+    if (!(deviceId && campaignId)) return;
+
+    /**
+     * A ---> Campaign id
+     * B ---> Device id
+     */
+    const query = `INSERT INTO ${CAMPAIGN_TO_DEVICES}
+                    (
+                        A,
+                        B
+                    )
+                    VALUES
+                    (
+                        '${campaignId}',
+                        '${deviceId}'
+                    );`
+    return await runQuery(query)
+}
+
+/**
+ * ****************************************************************
+ *                          Campaign To CONTENTS
+ * ****************************************************************
+ */
+import { CAMPAIGN_TO_CONTENTS } from '../utils/const'
+const insertCampaignToContents = async (campaignId: number, contentsId: number) => {
+    if (!(contentsId && campaignId)) return;
+
+    /**
+     * A ---> Campaign id
+     * B ---> Device id
+     */
+    const query = `INSERT INTO ${CAMPAIGN_TO_CONTENTS}
+                     (
+                         A,
+                         B
+                     )
+                     VALUES
+                     (
+                         '${campaignId}',
+                         '${contentsId}'
+                     );`
     return await runQuery(query)
 }

@@ -1,0 +1,51 @@
+POST http://localhost:3001/signup
+Content-Type: application/json
+
+{
+  "email": "himanshu@gmailllllll.com",
+  "firstName": "Test",
+  "lastName": "Doe",
+  "mobile": "90048120511",
+  "countryId": 2,
+  "organisation": { "name": "TEST", "uid": "Test" }
+}
+
+###
+# Create a new signup account with existing organisation
+POST http://localhost:3001/signup
+Content-Type: application/json
+
+{
+  "email": "himanshuu@gmail.com",
+  "firstName": "Himanshuuuu",
+  "lastName": "Doe",
+  "mobile": "90048102051",
+  "countryId": 8,
+  "organisationId": 31,
+  "role": "USER"
+}
+
+
+###
+# SignIn
+
+POST http://localhost:3001/login
+Content-Type: application/json
+
+{ "email": "himanshu@gmailllllll.com", "password": "Change123" }
+
+# Campaigns
+###
+POST http://localhost:3001/organisation/28/campaigns
+Content-Type: application/json
+
+{
+  "campaignName": "Training",
+  "campaignDescription": "Test campaign",
+  "campaignStatus": "ACTIVE",
+  "startDate": "2021-12-12T12:33:36.000Z",
+  "endDate": "2021-12-25T12:33:36.000Z",
+  "campaignFrequency": 3,
+  "devices": [6, 10],
+  "contents": [75, 76]
+}
