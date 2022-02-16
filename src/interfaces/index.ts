@@ -65,21 +65,39 @@ export interface IHydrateUserParameters {
 }
 
 // DEVICE
-export interface IDevice {
+export interface IDeviceResolution {
     id: number;
+    resolutionType: string;
+    commonName: string;
+    aspectRatio: string;
+    pixelSize: string;
+}
+export interface IDeviceBasics {
     uid: string;
     deviceName: string;
     deviceModel: string;
-    deviceBrand: string;
+    deviceBrand?: string;
     deviceSize: string;
     deviceLocation: string;
-    deviceStatus: string;
-    playingCampaign: string;
-    activeCampaigns: 0 | 1;
-    createdAt: string;
-    updatedAt: string;
-    organisationId: number;
+    deviceStatus?: 'Configured' | 'Not Configured';
     resolutionId: number;
+}
+export interface IDeviceNewRequest extends IDeviceBasics {
+    // can add if POST body accepts few more parameters
+}
+export interface IDeviceLite extends IDeviceBasics {
+    id?: number;
+    playingCampaign?: 'YES' | 'NO';
+    activeCampaigns?: 0 | 1;
+    createdAt?: string;
+    updatedAt?: string;
+    organisationId: number;
+}
+
+export interface IDevice extends IDeviceLite {
+    deviceResolution: IDeviceResolution,
+    organisation: IOrganisation;
+    campaigns: ICampaign[];
 }
 
 // CONTENT

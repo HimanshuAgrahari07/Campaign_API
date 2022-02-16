@@ -1,22 +1,14 @@
 import * as moment from 'moment';
-import { Request, Response, NextFunction } from 'express';
-import { SuccessResponse, GenericError } from '../../../utils/const';
-import { IUser, IHydrateUser, ICampaign } from '../../../interfaces/index'
-
-import HttpException from '../../../exceptions/HttpException';
 import * as Services from './services'
+import { Request, Response, NextFunction } from 'express';
+import { SuccessResponse, GenericError, uidConfig } from '../../../utils/const';
+import { IUser, IHydrateUser, ICampaign } from '../../../interfaces/index'
+import { generateUid } from '../../../utils/uidGenerator';
+import HttpException from '../../../exceptions/HttpException';
 
 import { getCampaignCountByOrgId, getUser } from '../../../database/DBQuery'
 import hydratorCampaign from './../../../lib/hydrators/hydratorsCampaign'
 import CampaignDto from './campaign.dto';
-
-function generateCampaignUid(organizationUid: string, countOfCampaigns: any) {
-    let maxNumSize = 3
-    // countOfCampaigns is the count of existing campaign, hence + 1 for next
-    countOfCampaigns = (countOfCampaigns + 1).toString();
-    while (countOfCampaigns.length < maxNumSize) countOfCampaigns = "0" + countOfCampaigns;
-    return `${organizationUid}-C${countOfCampaigns}`;
-}
 
 export const createOne = async (request: Request, response: Response, next: NextFunction) => {
     const orgId = parseInt(request.params.orgId)
@@ -39,7 +31,12 @@ export const createOne = async (request: Request, response: Response, next: Next
 
     const organizationUid = organisation.uid
     const countOfCampaigns = await getCampaignCountByOrgId(orgId)
-    const nextUid = generateCampaignUid(organizationUid, countOfCampaigns)
+    const nextUid = generateUid(
+        organizationUid,
+        parseInt(countOfCampaigns),
+        uidConfig.uid.campaign.prefix,
+        uidConfig.uid.campaign.length
+    )
 
     const params: ICampaign = {
         organisationId: orgId,

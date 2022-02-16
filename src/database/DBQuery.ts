@@ -83,7 +83,7 @@ export async function addNewUser({
  */
 import { ORGANIZATION_TABLE_NAME } from '../utils/const'
 
-export const insertNewOrganisation = async (param: IOrganisation) => {
+export const createNewOrganisation = async (param: IOrganisation) => {
     const { name, uid } = param
     if (!(name || uid)) return; // if none provided, return
 
@@ -230,7 +230,7 @@ export const updateContent = async (contentNumber: number, params: IBasicContent
     const query = `UPDATE ${CONTENT_TABLE_NAME}
                     SET ${queryString}
                     WHERE id = ${contentNumber};`;
-    
+
     return await runQuery(query)
 }
 
@@ -238,7 +238,7 @@ export const deleteContent = async (contentNumber: number) => {
 
     const query = `DELETE FROM ${CONTENT_TABLE_NAME}
                     WHERE id = ${contentNumber};`;
-    
+
     return await runQuery(query)
 }
 
@@ -356,10 +356,59 @@ export const getCampaignCountByOrgId = async (organisationId: number) => {
  * ****************************************************************
  */
 import { DEVICES_TABLE_NAME } from '../utils/const'
-export const getDeviceById = async (deviceId: number, organisationId: number) => {
-    if (!(deviceId && organisationId)) return;
+import { IDeviceNewRequest, IDeviceLite } from '../interfaces/index'
 
-    const where = getWhereQuery({ id: deviceId, organisationId })
+export const createDevice = async (params: IDeviceLite) => {
+    const {
+        uid,
+        deviceName,
+        deviceModel,
+        deviceBrand,
+        deviceSize,
+        deviceLocation,
+        deviceStatus,
+        playingCampaign,
+        activeCampaigns,
+        organisationId,
+        resolutionId,
+    } = params
+
+    const query = `INSERT INTO ${DEVICES_TABLE_NAME}
+    (
+        uid,
+        deviceName,
+        deviceModel,
+        deviceBrand,
+        deviceSize,
+        deviceLocation,
+        deviceStatus
+        ${playingCampaign ? ', playingCampaign' : ''}
+        ${activeCampaigns ? ', activeCampaigns' : ''}
+        ${organisationId ? ', organisationId' : ''}
+        ${resolutionId ? ', resolutionId' : ''}
+    )
+    VALUES
+    (
+        '${uid}',
+        '${deviceName}',
+        '${deviceModel}',
+        '${deviceBrand}',
+        '${deviceSize}',
+        '${deviceLocation}',
+        '${deviceStatus}'
+        ${playingCampaign ? `, '${playingCampaign}'` : ''}
+        ${activeCampaigns ? `, '${activeCampaigns}'` : ''}
+        ${organisationId ? `, '${organisationId}'` : ''}
+        ${resolutionId ? `, '${resolutionId}'` : ''}
+    );
+    `
+    return await runQuery(query)
+}
+
+export const getDeviceById = async (deviceId: number): Promise<IDeviceLite[]> => {
+    if (!(deviceId)) return;
+
+    const where = getWhereQuery({ id: deviceId })
 
     const query = `SELECT *
                    FROM ${DEVICES_TABLE_NAME}
@@ -371,7 +420,6 @@ export const getDeviceById = async (deviceId: number, organisationId: number) =>
 export const getDeviceByList = async (deviceIdArray: number[], organisationId: number) => {
     if (!(deviceIdArray.length && organisationId)) return;
 
-    const partialStr = deviceIdArray.filter(Boolean).join('\', ')
     const query = `SELECT *
                    FROM ${DEVICES_TABLE_NAME}
                    WHERE id in (${deviceIdArray})
@@ -380,6 +428,19 @@ export const getDeviceByList = async (deviceIdArray: number[], organisationId: n
     console.log('query >>> ', query)
     return await runQuery(query)
 }
+
+export const getDevicesCountInOrg = async (organisationId: number): Promise<number> => {
+    const where = getWhereQuery({ organisationId })
+    const query = `SELECT COUNT(*) as count
+                   FROM ${DEVICES_TABLE_NAME}
+                   WHERE ${where}
+                   ;`
+
+    const response = await runQuery(query)
+    return response[0].count
+}
+
+
 
 /**
  * ****************************************************************
@@ -430,5 +491,33 @@ const insertCampaignToContents = async (campaignId: number, contentsId: number) 
                          '${campaignId}',
                          '${contentsId}'
                      );`
+    return await runQuery(query)
+}
+
+
+/**
+ * ****************************************************************
+ *                          DEVICE RESOLUTIONS
+ * ****************************************************************
+ */
+import { RESOLUTIONS_TABLE_NAME } from '../utils/const'
+
+export const getResolutionsById = async (id: number | number[]) => {
+    const isArray = Array.isArray(id);
+
+    if (!(isArray || id)) return; // returns even if id = 0
+
+    const query = `SELECT *
+                    FROM ${RESOLUTIONS_TABLE_NAME}
+                    ${isArray ? `WHERE id in (${id})` : ''}
+                    ${id && !isArray ? `WHERE id = '${id}'` : ''}
+                    ;`;
+    return await runQuery(query)
+}
+
+export const getAllResolutions = async () => {
+    const query = `SELECT *
+                    FROM ${RESOLUTIONS_TABLE_NAME};`;
+
     return await runQuery(query)
 }

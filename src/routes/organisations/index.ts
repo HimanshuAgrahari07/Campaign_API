@@ -44,4 +44,13 @@ router.use("/:orgId(\\d+)/contents",
     addUserDetails,
     contents);
 
+// DEVICES
+import devices from "../authentication/devices";
+router.use("/:orgId(\\d+)/devices",
+    checkIfParameterExists,
+    authenticate,
+    addUserDetails,
+    devices);
+
+
 export default router;

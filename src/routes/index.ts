@@ -1,7 +1,6 @@
 import * as express from "express";
 import addUserDetails from "../middlewares/addUserDetails"
 import authenticate from "../middlewares/authenticate.middleware"
-const path = require("path");
 // routers
 
 const router = express.Router();

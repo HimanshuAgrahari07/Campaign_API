@@ -49,7 +49,7 @@ export const GenericError = {
     },
 }
 
-export const SuccessResponse = (request: Request, response: Response, data? : any) => {
+export const SuccessResponse = (request: Request, response: Response, data?: any) => {
     response.status(200).json({
         status: 200,
         message: 'Request completed successfully',
@@ -58,6 +58,18 @@ export const SuccessResponse = (request: Request, response: Response, data? : an
     })
 }
 
+export const uidConfig = {
+    uid: {
+        campaign: {
+            prefix: process.env.CAMPAIGN_UID_PREFIX || "C",
+            length: parseInt(process.env.CAMPAIGN_UID_LENGTH) || 3,
+        },
+        devices: {
+            prefix: process.env.DEVICE_UID_PREFIX || "0",
+            length: parseInt(process.env.DEVICE_UID_LENGTH) || 3,
+        }
+    }
+}
 export const RESOLUTIONS_TABLE_NAME = 'resolutions';
 export const COUNTRIES_TABLE_NAME = 'countries';
 export const USERS_TABLE_NAME = 'users';

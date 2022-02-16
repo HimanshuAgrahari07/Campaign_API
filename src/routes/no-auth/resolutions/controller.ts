@@ -10,3 +10,14 @@ export const getAll = async (request: Request, response: Response, next: NextFun
         SuccessResponse(request, response, responseFromDB)
     }
 }
+
+export const getOne = async (request: Request, response: Response, next: NextFunction) => {
+    const orgId = parseInt(request.params.orgId);
+    const id = parseInt(request.params.orgId);
+
+    const responseFromDB = await Services.getOne(id).catch(err => next(new HttpException(err.message)));
+
+    if (responseFromDB) {
+        SuccessResponse(request, response, responseFromDB)
+    }
+}

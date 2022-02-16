@@ -1,7 +1,7 @@
 import * as crypto from "crypto";
 import { Request, Response, NextFunction } from 'express';
 import { checkUserEmail, checkUserPhone, checkIfOrganisationExits } from '../../../utils/userCreation'
-import { insertNewOrganisation, getOrganisation, addNewUser } from '../../../database/DBQuery'
+import { createNewOrganisation, getOrganisation, addNewUser } from '../../../database/DBQuery'
 import hydrateUser from '../../../lib/hydrators/hydratorsUser'
 
 export const SignUp = async (body: any, next: NextFunction) => {
@@ -34,7 +34,7 @@ export const SignUp = async (body: any, next: NextFunction) => {
 
     if (isNewUser) {
         // create new orgs
-        await insertNewOrganisation({
+        await createNewOrganisation({
             name: organisation && organisation.name,
             uid: organisation && organisation.uid
         })

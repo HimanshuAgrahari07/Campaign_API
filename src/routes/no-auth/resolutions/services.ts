@@ -1,7 +1,9 @@
-import runQuery from '../../../database/Database'
-import { RESOLUTIONS_TABLE_NAME } from '../../../utils/const'
+import * as query from '../../../database/DBQuery'
 
 export const getAllResolutions = async () => {
-    const query = `Select * from ${RESOLUTIONS_TABLE_NAME}`;
-    return await runQuery(query)
+    return await query.getAllResolutions()
+}
+
+export const getOne = async (id: number) => {
+    return await query.getResolutionsById(id)
 }
