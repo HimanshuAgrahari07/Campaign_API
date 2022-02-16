@@ -52,11 +52,17 @@ export const createOne = async (request: Request, response: Response, next: Next
         uid: nextUid
     }
 
-    const createdCampaign = await Services.createNew(params).catch(err => {
-        console.error(err)
-        next(new HttpException(err.message))
-    });
-    const hydratedCampaign = await hydratorCampaign({ campaignRecord: createdCampaign, organizationRecord: organisation, uid: nextUid, contents, devices })
+    const createdCampaignId = await Services.createNew(params)
+    .catch(err => next(err))
+    console.log(createdCampaignId)
+    if (!createdCampaignId) return
+
+    const hydratedCampaign = await hydratorCampaign({
+        campaignId: createdCampaignId,
+        organizationRecord: organisation,
+        uid: nextUid,
+        contents, devices
+    })
 
     if (hydratedCampaign) {
         SuccessResponse(request, response, hydratedCampaign)

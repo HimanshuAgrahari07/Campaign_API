@@ -10,7 +10,6 @@ const getWhereQuery = (valuesObject: any, joinBy?: 'AND' | 'OR') => {
 }
 
 
-
 /**
  * ****************************************************************
  *                          USERS
@@ -223,28 +222,82 @@ export const getAllContentsListForAnOrganisation = async (organisationId: number
     return await runQuery(query)
 }
 
-export const updateContent = async (contentNumber: number, params: IBasicContent) => {
+export const updateContent = async (contentId: number, params: IBasicContent) => {
     const requiredData = Object.entries(params).filter(e => e[1])
     const queryString = requiredData.map(e => `${e[0]}='${e[1]}'`).join(', ')
 
     const query = `UPDATE ${CONTENT_TABLE_NAME}
                     SET ${queryString}
-                    WHERE id = ${contentNumber};`;
+                    WHERE id = ${contentId};`;
 
     return await runQuery(query)
 }
 
-export const deleteContent = async (contentNumber: number) => {
+export const deleteContent = async (contentId: number) => {
 
     const query = `DELETE FROM ${CONTENT_TABLE_NAME}
-                    WHERE id = ${contentNumber};`;
+                    WHERE id = ${contentId};`;
 
     return await runQuery(query)
 }
 
 
+export const checkIfContentExists = async (contentId: number): Promise<boolean> => {
+    if (!(contentId)) return;
 
+    const query = `SELECT EXISTS (
+                        SELECT * FROM ${CONTENT_TABLE_NAME}
+                        WHERE id = ${contentId}
+                    )
+                    AS 'exists';`
 
+    const response = await runQuery(query)
+    return response[0].exists === 1
+}
+
+// export const checkIfContentsExists = async (deviceIds: number[]): Promise<{
+//     allExists: boolean,
+//     message: string
+// }> => {
+//     if (!(deviceIds.length)) return;
+
+//     const testResults = await Promise.all(deviceIds.map(deviceId => checkIfContentExists(deviceId)))
+//     // const doesAllExists = testResults.every((result, index) => result === true)
+//     const indexOfMissingDevices = testResults.map(element => element === false)
+//     const missingDevices = deviceIds.filter((_, index) => indexOfMissingDevices[index] === true)
+//     const missingDevicesLength = missingDevices.length;
+//     const message = missingDevicesLength === 0 ? 'All devices exist' : `${missingDevicesLength} devices do not exist`
+//     const concatMissingDevices = missingDevices.join(', ')
+//     const allExists = missingDevicesLength === 0
+
+//     return {
+//         allExists,
+//         message: `${message} - (${concatMissingDevices})`
+//     }
+// }
+
+export const checkIfContentsExists = async (deviceIds: number[]): Promise<{
+    allExists: boolean,
+    message: string
+}> => {
+    if (!(deviceIds.length)) return {
+        allExists: false,
+        message: 'No contents provided'
+    }
+
+    const exists = await Promise.all(deviceIds.map(deviceId => checkIfContentExists(deviceId)))
+    const allExists = exists.every(exists => exists === true)
+
+    if (!allExists) return {
+        allExists,
+        message: 'One or more contents do not exist'
+    }
+
+    return {
+        allExists,
+        message: ''
+    }
+}
 
 
 /**
@@ -270,8 +323,9 @@ export const createCampaign = async ({
     campaignFrequency,
     devices,
     contents
-}: ICampaign) => {
+}: ICampaign): Promise<number> => {
     if (!(organisationId && campaignName && uid && campaignStatus && startDate && endDate && campaignFrequency)) return; // if none provided, return
+
 
     const createNewCampaignQuery = `INSERT INTO ${CAMPAIGN_TABLE_NAME}
     (
@@ -298,24 +352,17 @@ export const createCampaign = async ({
     `
     const response = await runQuery(createNewCampaignQuery)
     // update campaign to devices table
-    // await insertCampaignToDevice()
     if (response.affectedRows === 0) throw new Error('Campaign creation failed');
     if (response.affectedRows === 1) {
-        const createdCampaigns = await getCampaignByAnyColumn({
-            uid,
-            organisationId
-        }, 'AND')
-
-        const createdCampaign = createdCampaigns[0]
-        const createdCampaignId = createdCampaign.id;
+        const createdCampaignId = response.insertId;
 
         await Promise.all(devices.map(deviceId => insertCampaignToDevice(createdCampaignId, deviceId)))
         await Promise.all(contents.map(contentId => insertCampaignToContents(createdCampaignId, contentId)))
 
-        return [createdCampaign]
+        return createdCampaignId
     }
 
-    return []
+    return null
 }
 
 export const getCampaignById = async (campaignId: number) => {
@@ -440,6 +487,41 @@ export const getDevicesCountInOrg = async (organisationId: number): Promise<numb
     return response[0].count
 }
 
+const checkIfDeviceExists = async (deviceId: number): Promise<boolean> => {
+    if (!(deviceId)) return;
+
+    const query = `SELECT EXISTS (
+                        SELECT * FROM ${DEVICES_TABLE_NAME}
+                        WHERE id = ${deviceId}
+                    )
+                    AS 'exists';`
+
+    const response = await runQuery(query)
+    return response[0].exists === 1
+}
+
+export const checkIfDevicesExists = async (deviceIds: number[]): Promise<{
+    allExists: boolean,
+    message: string
+}> => {
+    if (!(deviceIds.length)) return {
+        allExists: false,
+        message: 'No devices provided'
+    }
+
+    const exists = await Promise.all(deviceIds.map(deviceId => checkIfDeviceExists(deviceId)))
+    const allExists = exists.every(exists => exists === true)
+
+    if (!allExists) return {
+        allExists,
+        message: 'One or more devices do not exist'
+    }
+
+    return {
+        allExists,
+        message: ''
+    }
+}
 
 
 /**
@@ -501,6 +583,7 @@ const insertCampaignToContents = async (campaignId: number, contentsId: number) 
  * ****************************************************************
  */
 import { RESOLUTIONS_TABLE_NAME } from '../utils/const'
+import devices from 'routes/authentication/devices'
 
 export const getResolutionsById = async (id: number | number[]) => {
     const isArray = Array.isArray(id);
