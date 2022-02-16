@@ -21,3 +21,7 @@ export const createNew = async (params: ICampaign): Promise<number> => {
 export const getAllList = async (organisationId: number) => {
     return await query.getAllCampaignByOrgId(organisationId);
 }
+
+export const getCampaignCountByOrgId = async (organisationId: number) => {
+    return await query.getCampaignCountByOrgId(organisationId)
+} 

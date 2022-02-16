@@ -386,7 +386,7 @@ export const getAllCampaignByOrgId = async (organisationId: number) => {
     return await getCampaignByAnyColumn({ organisationId }, 'AND')
 }
 
-export const getCampaignCountByOrgId = async (organisationId: number) => {
+export const getCampaignCountByOrgId = async (organisationId: number): Promise<number> => {
     const where = getWhereQuery({ organisationId })
     const query = `SELECT count(*) as count
                    FROM ${CAMPAIGN_TABLE_NAME}

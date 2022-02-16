@@ -8,8 +8,10 @@ import * as controller from './controller';
 const router = Router({ mergeParams: true });
 
 // helper function
-router.post("", validationMiddleware(CampaignDto, false), controller.createOne)
+router.post("/", validationMiddleware(CampaignDto, false), controller.createOne)
 
-router.get("", controller.getAll)
+router.get("/", controller.getAll)
+
+router.get("/:id(\\d+)", controller.getAll)
 
 export default router;
