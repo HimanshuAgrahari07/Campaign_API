@@ -1,9 +1,6 @@
 import { NextFunction, Response, Request } from 'express';
 import HttpException from '../exceptions/HttpException';
-import { decodeUserToken } from "../utils/jwt";
 import { GenericError } from '../utils/const'
-import { USERS_TABLE_NAME } from '../utils/const'
-import runQuery from '../database/Database'
 import hydrateUser from '../lib/hydrators/hydratorsUser'
 import { getUser } from '../database/DBQuery';
 
@@ -16,17 +13,10 @@ export default async (req: Request, res: Response, next: NextFunction) => {
     let record: any;
 
     try {
-        // const validValues = Object.entries(decodedUserInfo).filter(e => e[0])
-        // const where = validValues.map(e => `${e[0]}='${e[1]}'`).join(' OR ')
-        // const query = `SELECT * 
-        //             FROM ${USERS_TABLE_NAME || 'users'}
-        //             WHERE ${where};`
-
-        // const userDetails = await runQuery(query);
         const userDetails = await getUser({ email })
 
         if (!userDetails.length) throw new Error(`No user exists with given token`)
-
+        
         record = userDetails[0];
     } catch (err) {
         // invalid token or user not found

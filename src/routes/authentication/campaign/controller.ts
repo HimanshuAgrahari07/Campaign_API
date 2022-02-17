@@ -50,7 +50,7 @@ export const createOne = async (request: Request, response: Response, next: Next
     }
 
     const createdCampaignId = await Services.createNew(params)
-    .catch(err => next(err))
+        .catch(err => next(err))
     console.log(createdCampaignId)
     if (!createdCampaignId) return
 
@@ -58,7 +58,7 @@ export const createOne = async (request: Request, response: Response, next: Next
         campaignId: createdCampaignId,
         organizationRecord: organisation,
         uid: nextUid,
-        contents, devices
+        contentsList: contents, devicesList: devices
     })
 
     if (hydratedCampaign) {
@@ -74,5 +74,18 @@ export const getAll = async (request: Request, response: Response, next: NextFun
     // )
     if (allCampaigns) {
         SuccessResponse(request, response, allCampaigns)
+    }
+}
+
+export const getOne = async (request: Request, response: Response, next: NextFunction) => {
+    const orgId = parseInt(request.params.orgId)
+    const campaignId = parseInt(request.params.id);
+
+    const campaign = await Services.getById(campaignId, orgId)
+    const hydratedAllCampaign = await Promise.all(
+        campaign.map(async(campaign: any) => await hydratorCampaign({ campaignRecord: campaign}))
+    )
+    if (hydratedAllCampaign.length > 0) {
+        SuccessResponse(request, response, hydratedAllCampaign)
     }
 }

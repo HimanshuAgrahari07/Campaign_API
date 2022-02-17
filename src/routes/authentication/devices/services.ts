@@ -1,7 +1,7 @@
 import * as query from '../../../database/DBQuery'
 import hydratorsContentsWithOrgs from '../../../lib/hydrators/hydratorsContentsWithOrgs';
 import hydratorsContentLite from '../../../lib/hydrators/hydratorsContentLite';
-import { IContent, IContentWithOrganisation, IDevice, IDeviceLite, IDeviceNewRequest } from 'interfaces';
+import { IContentLite, IContent, IDevice, IDeviceLite, IDeviceNewRequest } from 'interfaces';
 import * as fileHandling from './../../../utils/fileHandling';
 import { createError, ErrorType } from '../../../errors/createError';
 import { generateUid } from '../../../utils/uidGenerator';

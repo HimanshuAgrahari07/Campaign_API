@@ -1,5 +1,5 @@
 import runQuery from './Database'
-import { ICampaign, IOrganisation } from '../interfaces/index'
+import { ICampaign, IDevice, IOrganisation } from '../interfaces/index'
 
 // joins default values using AND
 const getWhereQuery = (valuesObject: any, joinBy?: 'AND' | 'OR') => {
@@ -130,7 +130,7 @@ export const getOrganisationById = async (id: number): Promise<IOrganisation[]> 
  * ****************************************************************
  */
 import { CONTENT_TABLE_NAME } from '../utils/const'
-import { IContent, IBasicContent } from '../interfaces/index'
+import { IContentLite, IBasicContent } from '../interfaces/index'
 
 export const createContent = async ({
     organisationId,
@@ -177,7 +177,7 @@ export const createContent = async ({
  * 
  * Even if it returns single row, it will return array of one row
  */
-export const getContentById = async (contentId: number, organisationId?: number): Promise<IContent[]> => {
+export const getContentById = async (contentId: number, organisationId?: number): Promise<IContentLite[]> => {
     if (!(contentId)) return; // return
 
     const where = getWhereQuery({ id: contentId, organisationId }, 'AND')
@@ -195,7 +195,7 @@ export const getContentById = async (contentId: number, organisationId?: number)
  * @param organisationId Orgs id for which we want to query contents
  * @returns List of contents
  */
-export const getContentsList = async (contentIdArray: number[], organisationId?: number): Promise<IContent[]> => {
+export const getContentsList = async (contentIdArray: number[], organisationId?: number): Promise<IContentLite[]> => {
     if (!(contentIdArray.length)) return; // if none provided, return
 
     const query = `SELECT *
@@ -212,7 +212,7 @@ export const getContentsList = async (contentIdArray: number[], organisationId?:
  * @param organisationId Orgs id for which we want to query contents
  * @returns List of contents
  */
-export const getAllContentsListForAnOrganisation = async (organisationId: number): Promise<IContent[]> => {
+export const getAllContentsListForAnOrganisation = async (organisationId: number): Promise<IContentLite[]> => {
     if (!organisationId) return; // if none provided, return
 
     const query = `SELECT *
@@ -365,12 +365,12 @@ export const createCampaign = async ({
     return null
 }
 
-export const getCampaignById = async (campaignId: number) => {
+export const getCampaignById = async (campaignId: number, organisationId?: number): Promise<ICampaign[]> => {
     if (!(campaignId)) return; // if none provided, return
-    return getCampaignByAnyColumn({ id: campaignId }, 'AND')
+    return getCampaignByAnyColumn({ id: campaignId, organisationId }, 'AND')
 }
 
-export const getCampaignByAnyColumn = async (columnNameValuePairObj: {}, joinBy?: 'AND' | 'OR') => {
+export const getCampaignByAnyColumn = async (columnNameValuePairObj: {}, joinBy?: 'AND' | 'OR'): Promise<ICampaign[]> => {
     const where = getWhereQuery(columnNameValuePairObj, joinBy || 'AND')
 
     const query = `SELECT *
@@ -464,7 +464,7 @@ export const getDeviceById = async (deviceId: number): Promise<IDeviceLite[]> =>
     return await runQuery(query)
 }
 
-export const getDeviceByList = async (deviceIdArray: number[], organisationId: number) => {
+export const getDeviceByList = async (deviceIdArray: number[], organisationId: number): Promise<IDeviceLite[]> => {
     if (!(deviceIdArray.length && organisationId)) return;
 
     const query = `SELECT *
@@ -472,7 +472,6 @@ export const getDeviceByList = async (deviceIdArray: number[], organisationId: n
                    WHERE id in (${deviceIdArray})
                    AND organisationId = '${organisationId}'
                    ;`;
-    console.log('query >>> ', query)
     return await runQuery(query)
 }
 
@@ -530,7 +529,7 @@ export const checkIfDevicesExists = async (deviceIds: number[]): Promise<{
  * ****************************************************************
  */
 import { CAMPAIGN_TO_DEVICES } from '../utils/const'
-const insertCampaignToDevice = async (campaignId: number, deviceId: number) => {
+export const insertCampaignToDevice = async (campaignId: number, deviceId: number) => {
     if (!(deviceId && campaignId)) return;
 
     /**
@@ -548,6 +547,28 @@ const insertCampaignToDevice = async (campaignId: number, deviceId: number) => {
                         '${deviceId}'
                     );`
     return await runQuery(query)
+}
+
+export const getDevicesListForCampaign = async (campaignId: number): Promise<number[]> => {
+    if (!(campaignId)) return;
+
+    const query = `SELECT B
+                   FROM ${CAMPAIGN_TO_DEVICES}
+                   WHERE A = '${campaignId}'
+                   ;`
+    const response = await runQuery(query)
+    return response.map((row: { B: number }) => row.B)
+}
+
+export const geCampaignListForDevice = async (deviceId: number): Promise<number[]> => {
+    if (!(deviceId)) return;
+
+    const query = `SELECT A
+                   FROM ${CAMPAIGN_TO_DEVICES}
+                   WHERE B = '${deviceId}'
+                   ;`
+    const response = await runQuery(query)
+    return response.map((row: { A: number }) => row.A)
 }
 
 /**
@@ -574,6 +595,28 @@ const insertCampaignToContents = async (campaignId: number, contentsId: number) 
                          '${contentsId}'
                      );`
     return await runQuery(query)
+}
+
+export const getContentListForCampaign = async(campaignId: number): Promise<number[]> => {
+    if (!(campaignId)) return;
+
+    const query = `SELECT B
+                   FROM ${CAMPAIGN_TO_CONTENTS}
+                   WHERE A = '${campaignId}'
+                   ;`
+    const response = await runQuery(query)
+    return response.map((row: { B: number }) => row.B)
+}
+
+export const geCampaignListForContent = async(contentId: number): Promise<number[]> => {
+    if (!(contentId)) return;
+
+    const query = `SELECT A
+                   FROM ${CAMPAIGN_TO_CONTENTS}
+                   WHERE B = '${contentId}'
+                   ;`
+    const response = await runQuery(query)
+    return response.map((row: { A: number }) => row.A)
 }
 
 

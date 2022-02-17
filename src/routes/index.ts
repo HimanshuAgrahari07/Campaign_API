@@ -1,6 +1,6 @@
 import * as express from "express";
-import addUserDetails from "../middlewares/addUserDetails"
-import authenticate from "../middlewares/authenticate.middleware"
+import addUserDetails from "../middleware/addUserDetails"
+import authenticate from "../middleware/authenticate.middleware"
 // routers
 
 const router = express.Router();

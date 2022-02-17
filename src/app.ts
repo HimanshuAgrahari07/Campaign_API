@@ -1,8 +1,8 @@
 import * as bodyParser from 'body-parser';
 import * as express from 'express';
 import * as cookieParser from 'cookie-parser';
-import errorMiddleware from './middlewares/error.middleware';
-import loggerMiddleware from './middlewares/logger.middleware'
+import errorMiddleware from './middleware/error.middleware';
+import loggerMiddleware from './middleware/logger.middleware'
 import routes from './routes'
 class App {
   public app: express.Application;
@@ -18,6 +18,10 @@ class App {
   public listen() {
     this.app.listen(process.env.PORT, () => {
       console.log(`App listening on the port ${process.env.PORT}`);
+      console.log(`Environment: ${process.env.NODE_ENV}`);
+      console.log(`API version: ${process.env.API_VERSION}`);
+      console.log(`API base url: ${process.env.API_BASE_URL}`);
+      console.log(`PID: ${process.pid}`);
     });
   }
 

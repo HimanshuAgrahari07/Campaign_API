@@ -24,4 +24,8 @@ export const getAllList = async (organisationId: number) => {
 
 export const getCampaignCountByOrgId = async (organisationId: number) => {
     return await query.getCampaignCountByOrgId(organisationId)
-} 
+}
+
+export const getById = async (campaignId: number, organisationId: number) => {
+    return await query.getCampaignById(campaignId, organisationId)
+}

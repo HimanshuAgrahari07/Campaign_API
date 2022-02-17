@@ -1,7 +1,7 @@
 import * as query from '../../../database/DBQuery'
 import hydratorsContentsWithOrgs from '../../../lib/hydrators/hydratorsContentsWithOrgs';
 import hydratorsContentLite from '../../../lib/hydrators/hydratorsContentLite';
-import { IContent, IContentWithOrganisation } from 'interfaces';
+import { IContentLite, IContent } from 'interfaces';
 import * as fileHandling from './../../../utils/fileHandling';
 import { createError, ErrorType } from '../../../errors/createError';
 
@@ -28,10 +28,10 @@ export const getAllList = async (organisationId: number) => {
     return await hydratorsContentsWithOrgs({ organisationId, contents })
 }
 
-export const getOne = async (organisationId: number, contentId: number): Promise<IContentWithOrganisation> => {
+export const getOne = async (organisationId: number, contentId: number): Promise<IContent> => {
     const liteContents = await hydratorsContentLite({ contentIds: [contentId] })
 
-    if (liteContents.length === 0) return {} as IContentWithOrganisation
+    if (liteContents.length === 0) return {} as IContent
 
     const hydratedContent = await hydratorsContentsWithOrgs({ organisationId, contents: liteContents })
     return hydratedContent[0]
@@ -48,7 +48,7 @@ export const updateOne = async (contentId: number, params: {
     filePath: string;
 }) => {
     const responseFromDB = await query.updateContent(contentId, params);
-    if (responseFromDB.affectedRows !== 1) return {} as IContentWithOrganisation
+    if (responseFromDB.affectedRows !== 1) return {} as IContent
 
     const data = await query.getContentById(contentId, params.organisationId);
     return data

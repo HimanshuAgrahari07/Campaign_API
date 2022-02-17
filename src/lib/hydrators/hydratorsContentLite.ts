@@ -1,13 +1,13 @@
-import { RequireAtLeastOne, IContent } from '../../interfaces';
+import { RequireAtLeastOne, IContentLite } from '../../interfaces';
 import * as query from '../../database/DBQuery';
 
 interface IHydrateContentsLite {
-    contents?: IContent[],
+    contents?: IContentLite[],
     contentIds?: number[]
 }
 
-export default async (params: RequireAtLeastOne<IHydrateContentsLite, 'contents' | 'contentIds'>): Promise<IContent[]> => {
-    let contents: IContent[];
+export default async (params: RequireAtLeastOne<IHydrateContentsLite, 'contents' | 'contentIds'>): Promise<IContentLite[]> => {
+    let contents: IContentLite[];
 
     if (params.contents && params.contents.length > 0) {
         contents = params.contents;

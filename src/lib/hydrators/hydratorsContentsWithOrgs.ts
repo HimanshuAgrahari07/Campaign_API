@@ -1,4 +1,4 @@
-import { IOrganisation, RequireAtLeastOne, IContent, IContentWithOrganisation } from '../../interfaces';
+import { IOrganisation, RequireAtLeastOne, IContentLite, IContent } from '../../interfaces';
 import * as query from '../../database/DBQuery';
 import hydratorsContentLite from './hydratorsContentLite'
 
@@ -6,18 +6,18 @@ import hydratorsContentLite from './hydratorsContentLite'
 interface IHydrateContentsWithOrgsParam {
     organisationId?: number;
     organisation?: IOrganisation;
-    contents?: IContent[];
+    contents?: IContentLite[];
     contentIds?: number[];
 }
 
-export default async (params: RequireAtLeastOne<IHydrateContentsWithOrgsParam, 'organisation' | 'organisationId'>): Promise<IContentWithOrganisation[]> => {
+export default async (params: RequireAtLeastOne<IHydrateContentsWithOrgsParam, 'organisation' | 'organisationId'>): Promise<IContent[]> => {
     const { organisationId: paramOrganisationId,
         organisation: paramOrganisation,
         contents: paramContents,
         contentIds: paramContentIds } = params;
 
     let organization: IOrganisation;
-    let contents: IContent[];
+    let contents: IContentLite[];
 
     if (paramOrganisation) {
         organization = paramOrganisation;
@@ -37,7 +37,7 @@ export default async (params: RequireAtLeastOne<IHydrateContentsWithOrgsParam, '
         contents = await query.getAllContentsListForAnOrganisation(organisationId)
     }
 
-    const out: IContentWithOrganisation[] = contents.map(content => ({
+    const out: IContent[] = contents.map(content => ({
         ...content,
         organisation: organization
     }))

@@ -112,20 +112,20 @@ export interface IBasicContent {
     fileName: string;
     filePath: string;
 }
-export interface IContent extends IBasicContent {
+export interface IContentLite extends IBasicContent {
     id: number;
     streamUrl: string | null;
     createdAt: string;
     updatedAt: string;
 }
 
-export interface IContentWithOrganisation extends IContent {
+export interface IContent extends IContentLite {
     organisation: IOrganisation;
 }
 
 // CAMPAIGNS
 export interface ICampaign {
-    id?: string;
+    id?: number;
     organisationId: number;
     campaignName: string;
     campaignDescription: string;

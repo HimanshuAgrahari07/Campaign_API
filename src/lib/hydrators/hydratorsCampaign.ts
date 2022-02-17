@@ -1,59 +1,73 @@
 const _ = require("lodash");
-import { RequireAtLeastOne } from '../../interfaces';
-import { getCampaignByAnyColumn, getCampaignById, getContentsList, getDeviceByList, getOrganisationById } from '../../database/DBQuery'
+import { ICampaign, IContentLite, IDevice, IDeviceLite, IOrganisation, RequireAtLeastOne } from '../../interfaces';
+import * as query from '../../database/DBQuery'
+import { createError, ErrorType } from '../../errors/createError';
 
 type IUidOrCampaignId = RequireAtLeastOne<{
-    campaignRecord?: any,
-    organizationRecord?: any,
+    campaignRecord?: ICampaign,
+    organizationRecord?: IOrganisation,
     uid?: string;
     campaignId?: number;
-    devices?: number[];
-    contents?: number[];
+    devicesList?: number[];
+    contentsList?: number[];
 }, 'uid' | 'campaignId' | 'campaignRecord'>
 
-export default async ({ campaignRecord, organizationRecord, uid, campaignId, devices, contents }: IUidOrCampaignId) => {
+export default async ({ campaignRecord, uid, campaignId, organizationRecord, devicesList: devices, contentsList: contents }: IUidOrCampaignId) => {
     if (!(
         campaignRecord
         || campaignId
         || uid
     )) return;
 
-    let campaign;
-    let organizationDetails;
-    if (!(campaignRecord && (typeof campaignRecord === 'object' || Array.isArray(campaignRecord)))) {
-        campaign = await getCampaignByAnyColumn({
-            id: campaignId,
-            uid
-        }, 'OR')
-    } else {
+    let campaign: ICampaign;
+    let organizationDetail: IOrganisation;
+    let contentsList: IContentLite[] = [];
+    let devicesList: IDeviceLite[] = [];
+
+    if (campaignRecord) {
         campaign = campaignRecord
-    }
-    
-    if (!(organizationRecord && (typeof organizationRecord === 'object' || Array.isArray(organizationRecord)))) {
-        const organizationId = campaignRecord && campaignRecord.organisationId
-        organizationDetails = await getOrganisationById(organizationId)
-        console.log(`organizationRecord >>>`, organizationRecord)
-
+    } else if (campaignId) {
+        const campaigns = await query.getCampaignById(campaignId) // returns array of campaign even if it is only one
+        campaign = campaigns[0];
+    } else if (uid) {
+        const campaigns = await query.getCampaignByAnyColumn({ uid }) // returns array of campaign even if it is only one
+        campaign = campaigns[0];
     } else {
-        organizationDetails = organizationRecord
+        throw createError(ErrorType.RESOURCE_NOT_FOUND)
     }
 
-    console.log(`organizationDetails >>>`, organizationDetails)
-    console.log(`campaign >>>`, campaign)
+    if(organizationRecord) {
+        organizationDetail = organizationRecord
+    } else if (campaign.organisationId) {
+        const organizations = await query.getOrganisationById(campaign.organisationId) // returns array of organisation even if it is only one
+        organizationDetail = organizations[0];
+    } else if(!organizationDetail) {
+        return;
+    }
 
-    if (!campaign.length) {
-        throw new Error(`Campaign doesn't exist`)
-    };
+    const organisationId = campaign.organisationId || organizationDetail.id;
 
-    const contentsList = await getContentsList(contents, campaign[0].organisationId)
-    const devicesList = await getDeviceByList(devices, campaign[0].organisationId)
+    // TODO: refactor this
+    if(devices && devices.length > 0) {
+        devicesList = await query.getDeviceByList(devices, organisationId)
+    } else {
+        devices = await query.getDevicesListForCampaign(campaign.id)
+        devicesList = await query.getDeviceByList(devices, organisationId)
+    }
+
+    if(contents && contents.length > 0) {
+        contentsList = await query.getContentsList(contents)
+    } else {
+        contents = await query.getContentListForCampaign(campaign.id)
+        contentsList = await query.getContentsList(contents)
+    }
+
     const out = {
-        ...campaign[0],
+        ...campaign,
         contents: contentsList,
         devices: devicesList,
-        organisation: organizationDetails
+        organisation: organizationDetail
     }
-    console.log(`out >>>`, out)
 
     return out
 };

@@ -4,7 +4,7 @@ const router = Router();
 
 
 // helper function
-import validationMiddleware from '../../../middlewares/validation.middleware';
+import validationMiddleware from '../../../middleware/validation.middleware';
 import {
     SignUpUserWithNewOrgDto,
     SignUpUserWithExistingOrgDto

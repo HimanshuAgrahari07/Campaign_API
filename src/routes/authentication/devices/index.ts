@@ -1,5 +1,5 @@
 import { Router, NextFunction, Request, Response } from 'express';
-import validationMiddleware from '../../../middlewares/validation.middleware'
+import validationMiddleware from '../../../middleware/validation.middleware'
 import * as controller from './controller';
 import dto from './devices.dto';
 

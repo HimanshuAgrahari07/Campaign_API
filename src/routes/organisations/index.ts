@@ -1,8 +1,8 @@
 
 import { Router, NextFunction, Request, Response } from 'express';
 import { getOrganisationById } from '../../database/DBQuery'
-import addUserDetails from "../../middlewares/addUserDetails"
-import authenticate from "../../middlewares/authenticate.middleware"
+import addUserDetails from "../../middleware/addUserDetails"
+import authenticate from "../../middleware/authenticate.middleware"
 
 function checkIfParameterExists(request: Request, response: Response, next: NextFunction) {
     const queryFunctions: any = {
