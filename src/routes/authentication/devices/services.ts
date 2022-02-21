@@ -29,3 +29,15 @@ export const getDevicesList = async (organisationId: number) => {
     // return await hydratorsContentsWithOrgs({ organisationId, contents })
     return deviceLists
 }
+
+export const updateOne = async (deviceId: number, organisationId: number, params: IDeviceNewRequest): Promise<IDeviceLite> => {
+    
+    const responseFromDB = await query.updateDevice(deviceId, params);
+    console.log(responseFromDB)
+    
+    if (responseFromDB.affectedRows === 0) {
+        throw createError(ErrorType.RESOURCE_NOT_FOUND)
+    }
+    
+    return await getDeviceById(deviceId, organisationId)
+}

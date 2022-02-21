@@ -269,27 +269,6 @@ export const checkIfContentExists = async (contentId: number): Promise<boolean> 
     return response[0].exists === 1
 }
 
-// export const checkIfContentsExists = async (deviceIds: number[]): Promise<{
-//     allExists: boolean,
-//     message: string
-// }> => {
-//     if (!(deviceIds.length)) return;
-
-//     const testResults = await Promise.all(deviceIds.map(deviceId => checkIfContentExists(deviceId)))
-//     // const doesAllExists = testResults.every((result, index) => result === true)
-//     const indexOfMissingDevices = testResults.map(element => element === false)
-//     const missingDevices = deviceIds.filter((_, index) => indexOfMissingDevices[index] === true)
-//     const missingDevicesLength = missingDevices.length;
-//     const message = missingDevicesLength === 0 ? 'All devices exist' : `${missingDevicesLength} devices do not exist`
-//     const concatMissingDevices = missingDevices.join(', ')
-//     const allExists = missingDevicesLength === 0
-
-//     return {
-//         allExists,
-//         message: `${message} - (${concatMissingDevices})`
-//     }
-// }
-
 export const checkIfContentsExists = async (deviceIds: number[]): Promise<{
     allExists: boolean,
     message: string
@@ -608,8 +587,14 @@ export const checkIfDevicesExists = async (deviceIds: number[]): Promise<{
     }
 }
 
-export const updateDevice = async (organisationId: number, deviceId: number) => {
-    throw new Error('updateDevice not implemented')
+export const updateDevice = async (deviceId: number, params: IDeviceNewRequest) => {
+    const queryString = getUpdateSetQueryString(params)
+
+    const query = `UPDATE ${DEVICES_TABLE_NAME}
+                    SET ${queryString}
+                    WHERE id = ${deviceId};`;
+
+    return await runQuery(query)
 }
 
 

@@ -62,40 +62,28 @@ export const getOne = async (request: Request, response: Response, next: NextFun
     const hydrateDevice = await hydratorsDevice({
         deviceDetail: device
     }).catch(error => next(error))
-    
+
     if (hydrateDevice) {
         SuccessResponse(request, response, hydrateDevice)
     }
 }
 
-// export const updateOne = async (request: any, response: Response, next: NextFunction) => {
-//     try {
-//         const orgId = parseInt(request.params.orgId)
-//         const contentId = parseInt(request.params.id)
+export const updateOne = async (request: Request, response: Response, next: NextFunction) => {
+    try {
+        const orgId = parseInt(request.params.orgId)
+        const contentId = parseInt(request.params.id)
 
-//         const { contentName, contentDescription } = request.body;
-//         const file = request.file;
+        const requestBody = request.body as IDeviceNewRequest
 
-//         const contentsParams = {
-//             organisationId: orgId,
-//             contentName,
-//             contentDescription,
-//             fileType: file.mimetype,
-//             fileSize: file.size,
-//             downloadUrl: `${config.baseUrl}/content/download/${file.filename}`,
-//             fileName: file.filename,
-//             filePath: file.path
-//         }
+        const data = await services.updateOne(contentId, orgId, requestBody).catch(error => next(error));
 
-//         const data = await services.updateOne(contentId, contentsParams);
-
-//         if (data) {
-//             SuccessResponse(request, response, data)
-//         }
-//     } catch (error) {
-//         next(new HttpException({ ...GenericError.ServerError.error, message: error.message }))
-//     }
-// }
+        if (data) {
+            SuccessResponse(request, response, data)
+        }
+    } catch (error) {
+        next(new HttpException({ ...GenericError.ServerError.error, message: error.message }))
+    }
+}
 
 // export const deleteOne = async (request: any, response: Response, next: NextFunction) => {
 //     try {

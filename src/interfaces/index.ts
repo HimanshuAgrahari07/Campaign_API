@@ -123,6 +123,8 @@ export interface IContent extends IContentLite {
     organisation: IOrganisation;
 }
 
+
+
 // CAMPAIGNS
 export interface ICampaignBasics {
     campaignName: string;

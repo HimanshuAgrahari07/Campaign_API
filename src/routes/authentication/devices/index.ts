@@ -19,10 +19,9 @@ router.get("/", controller.getAll)
 // get one device
 router.get("/:id(\\d+)", controller.getOne)
 
-// // update
-// router.put("/:id(\\d+)",
-//     upload('contents').single('attachment'),
-//     controller.updateOne)
+// update
+router.put("/:id(\\d+)",
+    controller.updateOne)
 
 // // update
 // router.delete("/:id(\\d+)",
