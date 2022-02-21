@@ -13,16 +13,15 @@ router.post("/",
     controller.createOne
 )
 
-// // get all contents
-// router.get("/", controller.getAll)
+// get all devices
+router.get("/", controller.getAll)
 
-// // get one contents
-// router.get("/:id(\\d+)", controller.getOne)
+// get one device
+router.get("/:id(\\d+)", controller.getOne)
 
-// // update
-// router.put("/:id(\\d+)",
-//     upload('contents').single('attachment'),
-//     controller.updateOne)
+// update
+router.put("/:id(\\d+)",
+    controller.updateOne)
 
 // // update
 // router.delete("/:id(\\d+)",

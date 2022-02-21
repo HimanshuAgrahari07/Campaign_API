@@ -7,6 +7,7 @@ import * as config from '../../../configuration';
 import { errorEnums, createError, ErrorType } from '../../../errors/createError';
 import { IDeviceNewRequest, IDeviceLite, IOrganisation, IHydrateUser } from '../../../interfaces';
 import { generateUid } from '../../../utils/uidGenerator';
+import hydratorsDevice from '../../../lib/hydrators/hydratorsDevice';
 
 export const createOne = async (request: Request, response: Response, next: NextFunction) => {
     try {
@@ -31,7 +32,7 @@ export const createOne = async (request: Request, response: Response, next: Next
         }
 
         const insertId = await services.createNew(contentsParams);
-        const insertedRecord = await services.getDeviceById(insertId);
+        const insertedRecord = await services.getDeviceById(insertId, orgId);
 
         if (insertedRecord) {
             SuccessResponse(request, response, insertedRecord)
@@ -41,53 +42,48 @@ export const createOne = async (request: Request, response: Response, next: Next
     }
 }
 
-// export const getAll = async (request: Request, response: Response, next: NextFunction) => {
-//     const orgId = parseInt(request.params.orgId)
-//     const allContents = await services.getAllList(orgId)
+export const getAll = async (request: Request, response: Response, next: NextFunction) => {
+    const orgId = parseInt(request.params.orgId)
+    const devicesList = await services.getDevicesList(orgId)
+    const hydrateDevicesList = await Promise.all(devicesList.map(async (device) => hydratorsDevice({
+        deviceId: device.id,
+    }))).catch(error => next(error))
 
-//     if (allContents) {
-//         SuccessResponse(request, response, allContents)
-//     }
-// }
+    if (hydrateDevicesList && hydrateDevicesList.length) {
+        SuccessResponse(request, response, hydrateDevicesList)
+    }
+}
 
-// export const getOne = async (request: Request, response: Response, next: NextFunction) => {
-//     const orgId = parseInt(request.params.orgId)
-//     const contentId = parseInt(request.params.id)
-//     const content = await services.getOne(orgId, contentId)
+export const getOne = async (request: Request, response: Response, next: NextFunction) => {
+    const orgId = parseInt(request.params.orgId);
+    const deviceId = parseInt(request.params.id);
+    const device = await services.getDeviceById(deviceId, orgId)
 
-//     if (content) {
-//         SuccessResponse(request, response, content)
-//     }
-// }
+    const hydrateDevice = await hydratorsDevice({
+        deviceDetail: device
+    }).catch(error => next(error))
 
-// export const updateOne = async (request: any, response: Response, next: NextFunction) => {
-//     try {
-//         const orgId = parseInt(request.params.orgId)
-//         const contentId = parseInt(request.params.id)
+    if (hydrateDevice) {
+        SuccessResponse(request, response, hydrateDevice)
+    }
+}
 
-//         const { contentName, contentDescription } = request.body;
-//         const file = request.file;
+export const updateOne = async (request: Request, response: Response, next: NextFunction) => {
+    try {
+        const orgId = parseInt(request.params.orgId)
+        const contentId = parseInt(request.params.id)
 
-//         const contentsParams = {
-//             organisationId: orgId,
-//             contentName,
-//             contentDescription,
-//             fileType: file.mimetype,
-//             fileSize: file.size,
-//             downloadUrl: `${config.baseUrl}/content/download/${file.filename}`,
-//             fileName: file.filename,
-//             filePath: file.path
-//         }
+        const requestBody = request.body as IDeviceNewRequest
 
-//         const data = await services.updateOne(contentId, contentsParams);
+        const data = await services.updateOne(contentId, orgId, requestBody).catch(error => next(error));
 
-//         if (data) {
-//             SuccessResponse(request, response, data)
-//         }
-//     } catch (error) {
-//         next(new HttpException({ ...GenericError.ServerError.error, message: error.message }))
-//     }
-// }
+        if (data) {
+            SuccessResponse(request, response, data)
+        }
+    } catch (error) {
+        next(new HttpException({ ...GenericError.ServerError.error, message: error.message }))
+    }
+}
 
 // export const deleteOne = async (request: any, response: Response, next: NextFunction) => {
 //     try {

@@ -123,20 +123,24 @@ export interface IContent extends IContentLite {
     organisation: IOrganisation;
 }
 
+
+
 // CAMPAIGNS
-export interface ICampaign {
-    id?: number;
-    organisationId: number;
+export interface ICampaignBasics {
     campaignName: string;
     campaignDescription: string;
-    uid: string;
     campaignStatus: string | 'ACTIVE' | 'INACTIVE';
     startDate: string;
     endDate: string;
     campaignFrequency: number;
+    devices: any[];
+    contents: any[];
+}
+export interface ICampaign extends ICampaignBasics {
+    id?: number;
+    organisationId: number;
+    uid: string;
     createdAt?: string;
     updatedAt?: string;
-    contents: any[];
-    devices: any[];
     organisation: IOrganisation;
 }

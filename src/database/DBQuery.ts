@@ -1,5 +1,6 @@
 import runQuery from './Database'
-import { ICampaign, IDevice, IOrganisation } from '../interfaces/index'
+import { ICampaign, ICampaignBasics, IOrganisation } from '../interfaces/index'
+import { createError, ErrorType } from '../errors/createError'
 
 // joins default values using AND
 const getWhereQuery = (valuesObject: any, joinBy?: 'AND' | 'OR') => {
@@ -7,6 +8,18 @@ const getWhereQuery = (valuesObject: any, joinBy?: 'AND' | 'OR') => {
     const where = requiredData.map(e => `${e[0]}='${e[1]}'`).join(` ${joinBy || 'AND'} `)
     console.log('where >>> ', where)
     return where
+}
+
+const getUpdateSetQueryString = (params: {}) => {
+    const dateArray = ['updatedAt', 'startDate', 'endDate']
+    const requiredData = Object.entries(params).filter(e => e[1])
+    return requiredData.map(e => {
+        const isADateColumn = dateArray.includes(e[0])
+        if (isADateColumn) {
+            return `${e[0]}=DATE_FORMAT(STR_TO_DATE('${e[1]}','%Y-%m-%dT%H:%i:%s.000Z'),'%Y-%m-%d %H:%i:%s')`
+        }
+        return `${e[0]}='${e[1]}'`
+    }).join(', ')
 }
 
 
@@ -223,8 +236,7 @@ export const getAllContentsListForAnOrganisation = async (organisationId: number
 }
 
 export const updateContent = async (contentId: number, params: IBasicContent) => {
-    const requiredData = Object.entries(params).filter(e => e[1])
-    const queryString = requiredData.map(e => `${e[0]}='${e[1]}'`).join(', ')
+    const queryString = getUpdateSetQueryString(params)
 
     const query = `UPDATE ${CONTENT_TABLE_NAME}
                     SET ${queryString}
@@ -233,12 +245,14 @@ export const updateContent = async (contentId: number, params: IBasicContent) =>
     return await runQuery(query)
 }
 
-export const deleteContent = async (contentId: number) => {
+export const deleteContent = async (contentId: number): Promise<boolean> => {
 
     const query = `DELETE FROM ${CONTENT_TABLE_NAME}
                     WHERE id = ${contentId};`;
 
-    return await runQuery(query)
+    const deleteResponseFromDB = await runQuery(query)
+    return deleteResponseFromDB.affectedRows === 1 ? true : false;
+
 }
 
 
@@ -254,27 +268,6 @@ export const checkIfContentExists = async (contentId: number): Promise<boolean> 
     const response = await runQuery(query)
     return response[0].exists === 1
 }
-
-// export const checkIfContentsExists = async (deviceIds: number[]): Promise<{
-//     allExists: boolean,
-//     message: string
-// }> => {
-//     if (!(deviceIds.length)) return;
-
-//     const testResults = await Promise.all(deviceIds.map(deviceId => checkIfContentExists(deviceId)))
-//     // const doesAllExists = testResults.every((result, index) => result === true)
-//     const indexOfMissingDevices = testResults.map(element => element === false)
-//     const missingDevices = deviceIds.filter((_, index) => indexOfMissingDevices[index] === true)
-//     const missingDevicesLength = missingDevices.length;
-//     const message = missingDevicesLength === 0 ? 'All devices exist' : `${missingDevicesLength} devices do not exist`
-//     const concatMissingDevices = missingDevices.join(', ')
-//     const allExists = missingDevicesLength === 0
-
-//     return {
-//         allExists,
-//         message: `${message} - (${concatMissingDevices})`
-//     }
-// }
 
 export const checkIfContentsExists = async (deviceIds: number[]): Promise<{
     allExists: boolean,
@@ -306,26 +299,18 @@ export const checkIfContentsExists = async (deviceIds: number[]): Promise<{
  * ****************************************************************
  */
 import { CAMPAIGN_TABLE_NAME } from '../utils/const'
-/**
- * 
- * @param param0 Object of type @ICampaign
- * @returns array of campaigns created
- * @throws error if not success
- */
-export const createCampaign = async ({
-    organisationId,
-    campaignName,
-    campaignDescription = '',
-    uid,
-    campaignStatus,
-    startDate,
-    endDate,
-    campaignFrequency,
-    devices,
-    contents
-}: ICampaign): Promise<number> => {
-    if (!(organisationId && campaignName && uid && campaignStatus && startDate && endDate && campaignFrequency)) return; // if none provided, return
 
+export const createCampaign = async (organisationId: number, uid: string, params: ICampaignBasics): Promise<number> => {
+    const {
+        campaignName,
+        campaignDescription = '',
+        campaignStatus,
+        startDate,
+        endDate,
+        campaignFrequency,
+        devices,
+        contents
+    } = params
 
     const createNewCampaignQuery = `INSERT INTO ${CAMPAIGN_TABLE_NAME}
     (
@@ -352,7 +337,6 @@ export const createCampaign = async ({
     `
     const response = await runQuery(createNewCampaignQuery)
     // update campaign to devices table
-    if (response.affectedRows === 0) throw new Error('Campaign creation failed');
     if (response.affectedRows === 1) {
         const createdCampaignId = response.insertId;
 
@@ -362,7 +346,7 @@ export const createCampaign = async ({
         return createdCampaignId
     }
 
-    return null
+    return NaN
 }
 
 export const getCampaignById = async (campaignId: number, organisationId?: number): Promise<ICampaign[]> => {
@@ -397,6 +381,73 @@ export const getCampaignCountByOrgId = async (organisationId: number): Promise<n
     return response[0].count
 }
 
+export const updateCampaign = async (campaignId: number, params: ICampaignBasics): Promise<boolean> => {
+    const { devices, contents, ...rest } = params;
+    const queryString = getUpdateSetQueryString(rest)
+
+    const query = `UPDATE ${CAMPAIGN_TABLE_NAME}
+                    SET ${queryString}
+                    WHERE id = ${campaignId};`;
+
+    const response = await runQuery(query)
+
+    // update campaign to devices and contents table
+    if (response.affectedRows === 1) {
+        const existingDevices = await getDevicesListForCampaign(campaignId);
+        const toBeInsertedNewDevices = devices.filter(device => !existingDevices.includes(device))
+        const toBeDeletedOldDevices = existingDevices.filter(device => !devices.includes(device))
+
+        if (toBeInsertedNewDevices.length > 0) await Promise.all(toBeInsertedNewDevices.map(deviceId => insertCampaignToDevice(campaignId, deviceId)))
+        if (toBeDeletedOldDevices.length > 0) await Promise.all(toBeDeletedOldDevices.map(deviceId => deleteCampaignDeviceMapping(campaignId, deviceId)))
+
+
+        const existingContents = await getContentListForCampaign(campaignId);
+        const toBeInsertedNewContents = contents.filter(content => !existingContents.includes(content))
+        const toBeDeletedOldContents = existingContents.filter(content => !contents.includes(content))
+
+
+        if (toBeInsertedNewContents.length > 0) await Promise.all(contents.map(contentId => insertCampaignToContents(campaignId, contentId)))
+        if (toBeDeletedOldContents.length > 0) await Promise.all(contents.map(contentId => deleteCampaignContentMapping(campaignId, contentId)))
+    }
+
+    return true
+}
+
+export const checkIfCampaignExists = async (campaignId: number, organisationId: number): Promise<boolean> => {
+    const query = `
+    SELECT EXISTS (
+        SELECT * FROM ${CAMPAIGN_TABLE_NAME}
+        WHERE id = ${campaignId}
+        AND organisationId = '${organisationId}'
+    )
+    AS 'exists';`
+
+    const response = await runQuery(query)
+    return response[0].exists === 1
+}
+
+export async function deleteCampaign(campaignId: number, orgId: number) {
+    const query = `
+                    DELETE FROM ${CAMPAIGN_TABLE_NAME}
+                    WHERE 
+                        id              = ${campaignId}
+                    AND organisationId  = ${orgId}
+                    ;`;
+
+
+    const response = await runQuery(query)
+
+    // update campaign to devices and contents table
+    if (response.affectedRows === 1) {
+        const existingDevices = await getDevicesListForCampaign(campaignId);
+        if (existingDevices.length > 0) await Promise.all(existingDevices.map(deviceId => deleteCampaignDeviceMapping(campaignId, deviceId)))
+
+        const existingContents = await getContentListForCampaign(campaignId);
+        if (existingContents.length > 0) await Promise.all(existingContents.map(contentId => deleteCampaignContentMapping(campaignId, contentId)))
+    }
+
+    return response;
+}
 /**
  * ****************************************************************
  *                          DEVICES
@@ -420,47 +471,61 @@ export const createDevice = async (params: IDeviceLite) => {
         resolutionId,
     } = params
 
+    // 1st row of query i.e uid is different from others, no preceding comma
+    // TODO: below query is buggy, write a loop to generate query
     const query = `INSERT INTO ${DEVICES_TABLE_NAME}
     (
-        uid,
-        deviceName,
-        deviceModel,
-        deviceBrand,
-        deviceSize,
-        deviceLocation,
-        deviceStatus
+        ${uid ? 'uid' : ''}
+        ${deviceName ? ', deviceName' : ''}
+        ${deviceModel ? ', deviceModel' : ''}
+        ${deviceBrand ? ', deviceBrand' : ''}
+        ${deviceSize ? ', deviceSize' : ''}
+        ${deviceLocation ? ', deviceLocation' : ''}
+        ${deviceStatus ? ', deviceStatus' : ''}
         ${playingCampaign ? ', playingCampaign' : ''}
         ${activeCampaigns ? ', activeCampaigns' : ''}
         ${organisationId ? ', organisationId' : ''}
         ${resolutionId ? ', resolutionId' : ''}
     )
     VALUES
-    (
-        '${uid}',
-        '${deviceName}',
-        '${deviceModel}',
-        '${deviceBrand}',
-        '${deviceSize}',
-        '${deviceLocation}',
-        '${deviceStatus}'
+        (
+            ${uid ? `  '${uid}'` : ''}
+        ${deviceName ? `, '${deviceName}'` : ''}
+        ${deviceModel ? `, '${deviceModel}'` : ''}
+        ${deviceBrand ? `, '${deviceBrand}'` : ''}
+        ${deviceSize ? `, '${deviceSize}'` : ''}
+        ${deviceLocation ? `, '${deviceLocation}'` : ''}
+        ${deviceStatus ? `, '${deviceStatus}'` : ''}
         ${playingCampaign ? `, '${playingCampaign}'` : ''}
         ${activeCampaigns ? `, '${activeCampaigns}'` : ''}
         ${organisationId ? `, '${organisationId}'` : ''}
         ${resolutionId ? `, '${resolutionId}'` : ''}
     );
-    `
+`
     return await runQuery(query)
 }
 
-export const getDeviceById = async (deviceId: number): Promise<IDeviceLite[]> => {
+export const getDeviceById = async (deviceId: number, organisationId?: number): Promise<IDeviceLite[]> => {
     if (!(deviceId)) return;
 
-    const where = getWhereQuery({ id: deviceId })
+    const where = getWhereQuery({ id: deviceId, organisationId })
 
     const query = `SELECT *
-                   FROM ${DEVICES_TABLE_NAME}
+    FROM ${DEVICES_TABLE_NAME}
                    WHERE ${where}
-                   ;`
+    ; `
+    return await runQuery(query)
+}
+
+export const getDevicesByOganisationId = async (organisationId: number): Promise<IDeviceLite[]> => {
+    if (!(organisationId)) return;
+
+    const where = getWhereQuery({ organisationId })
+
+    const query = `SELECT *
+    FROM ${DEVICES_TABLE_NAME}
+                   WHERE ${where}
+; `
     return await runQuery(query)
 }
 
@@ -468,10 +533,10 @@ export const getDeviceByList = async (deviceIdArray: number[], organisationId: n
     if (!(deviceIdArray.length && organisationId)) return;
 
     const query = `SELECT *
-                   FROM ${DEVICES_TABLE_NAME}
+    FROM ${DEVICES_TABLE_NAME}
                    WHERE id in (${deviceIdArray})
                    AND organisationId = '${organisationId}'
-                   ;`;
+    ; `;
     return await runQuery(query)
 }
 
@@ -480,7 +545,7 @@ export const getDevicesCountInOrg = async (organisationId: number): Promise<numb
     const query = `SELECT COUNT(*) as count
                    FROM ${DEVICES_TABLE_NAME}
                    WHERE ${where}
-                   ;`
+; `
 
     const response = await runQuery(query)
     return response[0].count
@@ -489,11 +554,11 @@ export const getDevicesCountInOrg = async (organisationId: number): Promise<numb
 const checkIfDeviceExists = async (deviceId: number): Promise<boolean> => {
     if (!(deviceId)) return;
 
-    const query = `SELECT EXISTS (
-                        SELECT * FROM ${DEVICES_TABLE_NAME}
+    const query = `SELECT EXISTS(
+    SELECT * FROM ${DEVICES_TABLE_NAME}
                         WHERE id = ${deviceId}
-                    )
-                    AS 'exists';`
+)
+                    AS 'exists'; `
 
     const response = await runQuery(query)
     return response[0].exists === 1
@@ -522,6 +587,16 @@ export const checkIfDevicesExists = async (deviceIds: number[]): Promise<{
     }
 }
 
+export const updateDevice = async (deviceId: number, params: IDeviceNewRequest) => {
+    const queryString = getUpdateSetQueryString(params)
+
+    const query = `UPDATE ${DEVICES_TABLE_NAME}
+                    SET ${queryString}
+                    WHERE id = ${deviceId};`;
+
+    return await runQuery(query)
+}
+
 
 /**
  * ****************************************************************
@@ -529,23 +604,23 @@ export const checkIfDevicesExists = async (deviceIds: number[]): Promise<{
  * ****************************************************************
  */
 import { CAMPAIGN_TO_DEVICES } from '../utils/const'
+/**
+ * A ---> Campaign id
+ * B ---> Device id
+ */
+
 export const insertCampaignToDevice = async (campaignId: number, deviceId: number) => {
     if (!(deviceId && campaignId)) return;
-
-    /**
-     * A ---> Campaign id
-     * B ---> Device id
-     */
     const query = `INSERT INTO ${CAMPAIGN_TO_DEVICES}
-                    (
-                        A,
-                        B
-                    )
-                    VALUES
-                    (
-                        '${campaignId}',
-                        '${deviceId}'
-                    );`
+(
+    A,
+    B
+)
+VALUES
+    (
+        '${campaignId}',
+        '${deviceId}'
+    ); `
     return await runQuery(query)
 }
 
@@ -555,7 +630,7 @@ export const getDevicesListForCampaign = async (campaignId: number): Promise<num
     const query = `SELECT B
                    FROM ${CAMPAIGN_TO_DEVICES}
                    WHERE A = '${campaignId}'
-                   ;`
+    ; `
     const response = await runQuery(query)
     return response.map((row: { B: number }) => row.B)
 }
@@ -566,9 +641,20 @@ export const geCampaignListForDevice = async (deviceId: number): Promise<number[
     const query = `SELECT A
                    FROM ${CAMPAIGN_TO_DEVICES}
                    WHERE B = '${deviceId}'
-                   ;`
+    ; `
     const response = await runQuery(query)
     return response.map((row: { A: number }) => row.A)
+}
+
+export const deleteCampaignDeviceMapping = async (campaignId: number, deviceId: number): Promise<boolean> => {
+    const query = `DELETE FROM ${CAMPAIGN_TO_DEVICES}
+WHERE
+A = ${campaignId}
+                    AND B = ${deviceId}
+; `;
+
+    const deleteResponseFromDB = await runQuery(query)
+    return deleteResponseFromDB.affectedRows === 1 ? true : false;
 }
 
 /**
@@ -577,46 +663,80 @@ export const geCampaignListForDevice = async (deviceId: number): Promise<number[
  * ****************************************************************
  */
 import { CAMPAIGN_TO_CONTENTS } from '../utils/const'
+/**
+ * A ---> Campaign id
+ * B ---> Device id
+ */
+
 const insertCampaignToContents = async (campaignId: number, contentsId: number) => {
     if (!(contentsId && campaignId)) return;
-
-    /**
-     * A ---> Campaign id
-     * B ---> Device id
-     */
     const query = `INSERT INTO ${CAMPAIGN_TO_CONTENTS}
-                     (
-                         A,
-                         B
-                     )
-                     VALUES
-                     (
-                         '${campaignId}',
-                         '${contentsId}'
-                     );`
+(
+    A,
+    B
+)
+VALUES
+    (
+        '${campaignId}',
+        '${contentsId}'
+    ); `
     return await runQuery(query)
 }
 
-export const getContentListForCampaign = async(campaignId: number): Promise<number[]> => {
+export const getContentListForCampaign = async (campaignId: number): Promise<number[]> => {
     if (!(campaignId)) return;
 
     const query = `SELECT B
                    FROM ${CAMPAIGN_TO_CONTENTS}
                    WHERE A = '${campaignId}'
-                   ;`
+    ; `
     const response = await runQuery(query)
     return response.map((row: { B: number }) => row.B)
 }
 
-export const geCampaignListForContent = async(contentId: number): Promise<number[]> => {
+export const geCampaignListForContent = async (contentId: number): Promise<number[]> => {
     if (!(contentId)) return;
 
     const query = `SELECT A
                    FROM ${CAMPAIGN_TO_CONTENTS}
                    WHERE B = '${contentId}'
-                   ;`
+    ; `
     const response = await runQuery(query)
     return response.map((row: { A: number }) => row.A)
+}
+
+export const updateContentForCampaign = async (campaignId: number, contentId: number) => {
+    const queryCheckIfAlreadyExists = `SELECT EXISTS(
+        SELECT * FROM ${CAMPAIGN_TO_CONTENTS}
+                                            WHERE
+                                                A = ${campaignId}
+                                            AND B = ${contentId}
+    )
+                                        AS 'exists'; `
+
+    const response = await runQuery(queryCheckIfAlreadyExists)
+    if (response[0].exists === 1) {
+        return; // no need to update
+    }
+
+    const query = `UPDATE ${CAMPAIGN_TO_CONTENTS}
+                    SET B = '${contentId}'
+WHERE
+A = ${campaignId}
+                    AND B = ${contentId}; `;
+
+    return await runQuery(query)
+}
+
+export const deleteCampaignContentMapping = async (campaignId: number, contentId: number): Promise<boolean> => {
+    const query = `DELETE FROM ${CAMPAIGN_TO_CONTENTS}
+WHERE
+A = ${campaignId}
+                    AND B = ${contentId}
+; `;
+
+    const deleteResponseFromDB = await runQuery(query)
+    return deleteResponseFromDB.affectedRows === 1 ? true : false;
 }
 
 
@@ -626,24 +746,24 @@ export const geCampaignListForContent = async(contentId: number): Promise<number
  * ****************************************************************
  */
 import { RESOLUTIONS_TABLE_NAME } from '../utils/const'
-import devices from 'routes/authentication/devices'
+import { IDeviceResolution } from '../interfaces/index'
 
-export const getResolutionsById = async (id: number | number[]) => {
+export const getResolutionsById = async (id: number | number[]): Promise<IDeviceResolution[]> => {
     const isArray = Array.isArray(id);
 
     if (!(isArray || id)) return; // returns even if id = 0
 
     const query = `SELECT *
-                    FROM ${RESOLUTIONS_TABLE_NAME}
+    FROM ${RESOLUTIONS_TABLE_NAME}
                     ${isArray ? `WHERE id in (${id})` : ''}
                     ${id && !isArray ? `WHERE id = '${id}'` : ''}
-                    ;`;
+; `;
     return await runQuery(query)
 }
 
 export const getAllResolutions = async () => {
     const query = `SELECT *
-                    FROM ${RESOLUTIONS_TABLE_NAME};`;
+    FROM ${RESOLUTIONS_TABLE_NAME}; `;
 
     return await runQuery(query)
 }
