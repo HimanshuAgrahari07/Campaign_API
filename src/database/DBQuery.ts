@@ -1,5 +1,5 @@
 import runQuery from './Database'
-import { ICampaign, ICampaignBasics, IDevice, IOrganisation } from '../interfaces/index'
+import { ICampaign, ICampaignBasics, IOrganisation } from '../interfaces/index'
 import { createError, ErrorType } from '../errors/createError'
 
 // joins default values using AND
@@ -526,10 +526,22 @@ export const createDevice = async (params: IDeviceLite) => {
     return await runQuery(query)
 }
 
-export const getDeviceById = async (deviceId: number): Promise<IDeviceLite[]> => {
+export const getDeviceById = async (deviceId: number, organisationId?: number): Promise<IDeviceLite[]> => {
     if (!(deviceId)) return;
 
-    const where = getWhereQuery({ id: deviceId })
+    const where = getWhereQuery({ id: deviceId, organisationId })
+
+    const query = `SELECT *
+    FROM ${DEVICES_TABLE_NAME}
+                   WHERE ${where}
+    ; `
+    return await runQuery(query)
+}
+
+export const getDevicesByOganisationId = async (organisationId: number): Promise<IDeviceLite[]> => {
+    if (!(organisationId)) return;
+
+    const where = getWhereQuery({ organisationId })
 
     const query = `SELECT *
     FROM ${DEVICES_TABLE_NAME}
@@ -749,8 +761,9 @@ A = ${campaignId}
  * ****************************************************************
  */
 import { RESOLUTIONS_TABLE_NAME } from '../utils/const'
+import { IDeviceResolution } from '../interfaces/index'
 
-export const getResolutionsById = async (id: number | number[]) => {
+export const getResolutionsById = async (id: number | number[]): Promise<IDeviceResolution[]> => {
     const isArray = Array.isArray(id);
 
     if (!(isArray || id)) return; // returns even if id = 0

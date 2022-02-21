@@ -13,8 +13,8 @@ router.post("/",
     controller.createOne
 )
 
-// // get all contents
-// router.get("/", controller.getAll)
+// get all devices
+router.get("/", controller.getAll)
 
 // // get one contents
 // router.get("/:id(\\d+)", controller.getOne)

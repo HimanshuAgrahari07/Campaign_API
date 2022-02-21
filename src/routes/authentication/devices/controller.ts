@@ -7,6 +7,7 @@ import * as config from '../../../configuration';
 import { errorEnums, createError, ErrorType } from '../../../errors/createError';
 import { IDeviceNewRequest, IDeviceLite, IOrganisation, IHydrateUser } from '../../../interfaces';
 import { generateUid } from '../../../utils/uidGenerator';
+import hydratorsDevice from '../../../lib/hydrators/hydratorsDevice';
 
 export const createOne = async (request: Request, response: Response, next: NextFunction) => {
     try {
@@ -31,7 +32,7 @@ export const createOne = async (request: Request, response: Response, next: Next
         }
 
         const insertId = await services.createNew(contentsParams);
-        const insertedRecord = await services.getDeviceById(insertId);
+        const insertedRecord = await services.getDeviceById(insertId, orgId);
 
         if (insertedRecord) {
             SuccessResponse(request, response, insertedRecord)
@@ -41,14 +42,17 @@ export const createOne = async (request: Request, response: Response, next: Next
     }
 }
 
-// export const getAll = async (request: Request, response: Response, next: NextFunction) => {
-//     const orgId = parseInt(request.params.orgId)
-//     const allContents = await services.getAllList(orgId)
+export const getAll = async (request: Request, response: Response, next: NextFunction) => {
+    const orgId = parseInt(request.params.orgId)
+    const devicesList = await services.getDevicesList(orgId)
+    const hydrateDevicesList = await Promise.all(devicesList.map(async (device) => hydratorsDevice({
+        deviceId: device.id,
+    })))
 
-//     if (allContents) {
-//         SuccessResponse(request, response, allContents)
-//     }
-// }
+    if (hydrateDevicesList.length) {
+        SuccessResponse(request, response, hydrateDevicesList)
+    }
+}
 
 // export const getOne = async (request: Request, response: Response, next: NextFunction) => {
 //     const orgId = parseInt(request.params.orgId)
