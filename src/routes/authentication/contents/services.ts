@@ -61,6 +61,5 @@ export const deleteOne = async (contentId: number) => {
     const filePath = contents[0].filePath
     await fileHandling.deleteFile(filePath)
 
-    const deleteResponseFromDB = await query.deleteContent(contentId);
-    return deleteResponseFromDB.affectedRows === 1 ? true : false;
+    return await query.deleteContent(contentId);
 }

@@ -1,5 +1,6 @@
-import { IsString, IsNumber, IsArray } from 'class-validator';
-export default class CampaignDto {
+import { IsString, IsNumber, IsArray, IsJSON } from 'class-validator';
+import OrganisationDto from './../../no-auth/organisations/organisation.dto'
+export class BasicCampaignDto {
     @IsString()
     public campaignName: string;
 
@@ -23,4 +24,18 @@ export default class CampaignDto {
 
     @IsArray()
     public contents: number[];
+}
+
+export class CampaignDto extends BasicCampaignDto {
+    @IsNumber()
+    public id: number;
+
+    @IsNumber()
+    public organisationId: number;
+
+    @IsString()
+    public uid: string;
+
+    @IsJSON()
+    public organisation: OrganisationDto
 }
