@@ -47,22 +47,26 @@ export const getAll = async (request: Request, response: Response, next: NextFun
     const devicesList = await services.getDevicesList(orgId)
     const hydrateDevicesList = await Promise.all(devicesList.map(async (device) => hydratorsDevice({
         deviceId: device.id,
-    })))
+    }))).catch(error => next(error))
 
-    if (hydrateDevicesList.length) {
+    if (hydrateDevicesList && hydrateDevicesList.length) {
         SuccessResponse(request, response, hydrateDevicesList)
     }
 }
 
-// export const getOne = async (request: Request, response: Response, next: NextFunction) => {
-//     const orgId = parseInt(request.params.orgId)
-//     const contentId = parseInt(request.params.id)
-//     const content = await services.getOne(orgId, contentId)
+export const getOne = async (request: Request, response: Response, next: NextFunction) => {
+    const orgId = parseInt(request.params.orgId);
+    const deviceId = parseInt(request.params.id);
+    const device = await services.getDeviceById(deviceId, orgId)
 
-//     if (content) {
-//         SuccessResponse(request, response, content)
-//     }
-// }
+    const hydrateDevice = await hydratorsDevice({
+        deviceDetail: device
+    }).catch(error => next(error))
+    
+    if (hydrateDevice) {
+        SuccessResponse(request, response, hydrateDevice)
+    }
+}
 
 // export const updateOne = async (request: any, response: Response, next: NextFunction) => {
 //     try {

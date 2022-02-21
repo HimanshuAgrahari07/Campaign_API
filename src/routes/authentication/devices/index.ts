@@ -16,8 +16,8 @@ router.post("/",
 // get all devices
 router.get("/", controller.getAll)
 
-// // get one contents
-// router.get("/:id(\\d+)", controller.getOne)
+// get one device
+router.get("/:id(\\d+)", controller.getOne)
 
 // // update
 // router.put("/:id(\\d+)",

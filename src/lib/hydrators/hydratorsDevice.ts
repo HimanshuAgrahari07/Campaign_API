@@ -11,7 +11,7 @@ export default async ({
     deviceId?: number,
     deviceDetail?: IDeviceLite
 }, 'deviceId' | 'deviceDetail'>): Promise<IDevice> => {
-    if (deviceId) {
+    if (!deviceDetail && deviceId) { // when only id is provided
         const response = await query.getDeviceById(deviceId);
         deviceDetail = response[0];
     }
