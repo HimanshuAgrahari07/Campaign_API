@@ -551,7 +551,7 @@ export const getDevicesCountInOrg = async (organisationId: number): Promise<numb
     return response[0].count
 }
 
-const checkIfDeviceExists = async (deviceId: number): Promise<boolean> => {
+const checkIfADeviceExists = async (deviceId: number): Promise<boolean> => {
     if (!(deviceId)) return;
 
     const query = `SELECT EXISTS(
@@ -573,7 +573,7 @@ export const checkIfDevicesExists = async (deviceIds: number[]): Promise<{
         message: 'No devices provided'
     }
 
-    const exists = await Promise.all(deviceIds.map(deviceId => checkIfDeviceExists(deviceId)))
+    const exists = await Promise.all(deviceIds.map(deviceId => checkIfADeviceExists(deviceId)))
     const allExists = exists.every(exists => exists === true)
 
     if (!allExists) return {
@@ -597,6 +597,16 @@ export const updateDevice = async (deviceId: number, params: IDeviceNewRequest) 
     return await runQuery(query)
 }
 
+export const deleteDevice = async (deviceId: number, organisationId: number) => {
+    const query = `
+    DELETE FROM ${DEVICES_TABLE_NAME}
+    WHERE
+        id = ${deviceId}
+    AND organisationId = ${organisationId}
+    ; `;
+
+    return await runQuery(query)
+}
 
 /**
  * ****************************************************************

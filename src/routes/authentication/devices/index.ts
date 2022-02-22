@@ -23,8 +23,7 @@ router.get("/:id(\\d+)", controller.getOne)
 router.put("/:id(\\d+)",
     controller.updateOne)
 
-// // update
-// router.delete("/:id(\\d+)",
-//     controller.deleteOne)
+router.delete("/:id(\\d+)",
+    controller.deleteOne)
 
 export default router;

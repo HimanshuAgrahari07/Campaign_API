@@ -31,13 +31,24 @@ export const getDevicesList = async (organisationId: number) => {
 }
 
 export const updateOne = async (deviceId: number, organisationId: number, params: IDeviceNewRequest): Promise<IDeviceLite> => {
-    
+
     const responseFromDB = await query.updateDevice(deviceId, params);
     console.log(responseFromDB)
+
+    if (responseFromDB.affectedRows === 0) {
+        throw createError(ErrorType.RESOURCE_NOT_FOUND)
+    }
+
+    return await getDeviceById(deviceId, organisationId)
+}
+
+export const deleteDevice = async (deviceId: number, organisationId: number): Promise<boolean> => {
+
+    const responseFromDB = await query.deleteDevice(deviceId, organisationId);
     
     if (responseFromDB.affectedRows === 0) {
         throw createError(ErrorType.RESOURCE_NOT_FOUND)
     }
-    
-    return await getDeviceById(deviceId, organisationId)
+
+    return responseFromDB.affectedRows === 1 ? true : false
 }

@@ -85,20 +85,16 @@ export const updateOne = async (request: Request, response: Response, next: Next
     }
 }
 
-// export const deleteOne = async (request: any, response: Response, next: NextFunction) => {
-//     try {
-//         const orgId = parseInt(request.params.orgId)
-//         const contentId = parseInt(request.params.id)
+export const deleteOne = async (request: any, response: Response, next: NextFunction) => {
+    try {
+        const orgId = parseInt(request.params.orgId)
+        const deviceId = parseInt(request.params.id)
 
-//         const data = await services.deleteOne(contentId)
-//         if (data) {
-//             SuccessResponse(request, response, data)
-//         }
-//     } catch (error) {
-//         if (error.enum == errorEnums.RESOURCE_NOT_FOUND) {
-//             next(error)
-//         } else {
-//             next(new HttpException({ ...GenericError.ServerError.error, message: error.message }))
-//         }
-//     }
-// }
+        const data = await services.deleteDevice(deviceId, orgId)
+        if (data) {
+            SuccessResponse(request, response, { message: 'Device deleted successfully' })
+        }
+    } catch (error) {
+        next(error)
+    }
+}
