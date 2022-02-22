@@ -2,12 +2,12 @@ POST http://localhost:3001/signup
 Content-Type: application/json
 
 {
-  "email": "himanshu@gmailllllll.com",
+  "email": "himanshu@gmaiil.com",
   "firstName": "Test",
   "lastName": "Doe",
-  "mobile": "90048120511",
+  "mobile": "90048120514",
   "countryId": 2,
-  "organisation": { "name": "TESTTTTT", "uid": "TestTTTT" }
+  "organisation": { "name": "Osmosys", "uid": "OSM2" }
 }
 
 ###
@@ -21,7 +21,7 @@ Content-Type: application/json
   "lastName": "Doe",
   "mobile": "90048102051",
   "countryId": 8,
-  "organisationId": 31,
+  "organisationId": 33,
   "role": "USER"
 }
 

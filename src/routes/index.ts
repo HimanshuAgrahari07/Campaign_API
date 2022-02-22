@@ -29,7 +29,6 @@ router.use("/content", content);
 
 // no route found
 router.use("/", function (req, res) {
-    // res.status(404).render('404.jade');
     res.status(404).json({ message: 'Route  not found', status: 404 });
 });
 

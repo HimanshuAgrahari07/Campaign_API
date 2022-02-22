@@ -45,6 +45,11 @@ export const createOne = async (request: Request, response: Response, next: Next
 export const getAll = async (request: Request, response: Response, next: NextFunction) => {
     const orgId = parseInt(request.params.orgId)
     const devicesList = await services.getDevicesList(orgId)
+    
+    if(devicesList.length === 0) {
+        return next(createError({...ErrorType.RESOURCE_NOT_FOUND, message: `No devices found for organisation with id ${orgId}`}))
+    }
+
     const hydrateDevicesList = await Promise.all(devicesList.map(async (device) => hydratorsDevice({
         deviceId: device.id,
     }))).catch(error => next(error))
@@ -85,20 +90,16 @@ export const updateOne = async (request: Request, response: Response, next: Next
     }
 }
 
-// export const deleteOne = async (request: any, response: Response, next: NextFunction) => {
-//     try {
-//         const orgId = parseInt(request.params.orgId)
-//         const contentId = parseInt(request.params.id)
+export const deleteOne = async (request: any, response: Response, next: NextFunction) => {
+    try {
+        const orgId = parseInt(request.params.orgId)
+        const deviceId = parseInt(request.params.id)
 
-//         const data = await services.deleteOne(contentId)
-//         if (data) {
-//             SuccessResponse(request, response, data)
-//         }
-//     } catch (error) {
-//         if (error.enum == errorEnums.RESOURCE_NOT_FOUND) {
-//             next(error)
-//         } else {
-//             next(new HttpException({ ...GenericError.ServerError.error, message: error.message }))
-//         }
-//     }
-// }
+        const data = await services.deleteDevice(deviceId, orgId)
+        if (data) {
+            SuccessResponse(request, response, { message: 'Device deleted successfully' })
+        }
+    } catch (error) {
+        next(error)
+    }
+}

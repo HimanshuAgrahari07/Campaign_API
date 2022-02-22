@@ -1,10 +1,10 @@
 import runQuery from './Database'
-import { ICampaign, ICampaignBasics, IOrganisation } from '../interfaces/index'
+import { ICampaign, ICampaignBasics, IOrganisation, RequireAtLeastOne } from '../interfaces/index'
 import { createError, ErrorType } from '../errors/createError'
 
 // joins default values using AND
 const getWhereQuery = (valuesObject: any, joinBy?: 'AND' | 'OR') => {
-    const requiredData = Object.entries(valuesObject).filter(e => e[1])
+    const requiredData = Object.entries(valuesObject).filter(e => Boolean(e[1]))
     const where = requiredData.map(e => `${e[0]}='${e[1]}'`).join(` ${joinBy || 'AND'} `)
     console.log('where >>> ', where)
     return where
@@ -111,11 +111,11 @@ export const createNewOrganisation = async (param: IOrganisation) => {
     return await runQuery(queryString)
 }
 
-export const getOrganisation = async (param: IOrganisation) => {
+export const getOrganisation = async (param: RequireAtLeastOne<IOrganisation, 'name' | 'id'| 'uid'>) => {
     const { name, uid, id } = param
     if (!(name || uid || id)) return; // if none provided, return
 
-    const where = getWhereQuery(param, 'OR')
+    const where = getWhereQuery(param, 'AND')
 
     const query = `SELECT *
                    FROM ${ORGANIZATION_TABLE_NAME}
@@ -123,10 +123,9 @@ export const getOrganisation = async (param: IOrganisation) => {
     return await runQuery(query)
 }
 
-export const getOrganisationById = async (id: number): Promise<IOrganisation[]> => {
-    if (!id) return; // if none provided, return
+export const getOrganisationById = async (organisationId: number, uid?: string): Promise<IOrganisation[]> => {
 
-    const where = getWhereQuery({ id }, 'OR')
+    const where = getWhereQuery({ id: organisationId, uid: uid }, 'AND')
 
     const query = `SELECT *
                    FROM ${ORGANIZATION_TABLE_NAME}
@@ -551,7 +550,7 @@ export const getDevicesCountInOrg = async (organisationId: number): Promise<numb
     return response[0].count
 }
 
-const checkIfDeviceExists = async (deviceId: number): Promise<boolean> => {
+const checkIfADeviceExists = async (deviceId: number): Promise<boolean> => {
     if (!(deviceId)) return;
 
     const query = `SELECT EXISTS(
@@ -573,7 +572,7 @@ export const checkIfDevicesExists = async (deviceIds: number[]): Promise<{
         message: 'No devices provided'
     }
 
-    const exists = await Promise.all(deviceIds.map(deviceId => checkIfDeviceExists(deviceId)))
+    const exists = await Promise.all(deviceIds.map(deviceId => checkIfADeviceExists(deviceId)))
     const allExists = exists.every(exists => exists === true)
 
     if (!allExists) return {
@@ -597,6 +596,16 @@ export const updateDevice = async (deviceId: number, params: IDeviceNewRequest) 
     return await runQuery(query)
 }
 
+export const deleteDevice = async (deviceId: number, organisationId: number) => {
+    const query = `
+    DELETE FROM ${DEVICES_TABLE_NAME}
+    WHERE
+        id = ${deviceId}
+    AND organisationId = ${organisationId}
+    ; `;
+
+    return await runQuery(query)
+}
 
 /**
  * ****************************************************************

@@ -42,17 +42,28 @@ export const checkUserPhone = async ({ phone }: { phone: string }) => {
     }
 };
 
-export const checkIfOrganisationExits = async ({ organisationId }: { organisationId: number }) => {
-    // skip if phone is null
-    if (!organisationId) return;
+export const checkIfOrganisationExits = async ({ organisationId, uid }: { organisationId: number, uid?: string }) => {
+    if (organisationId) {
+        const organisation = await getOrganisationById(organisationId)
 
-    const organisation = await getOrganisationById(organisationId)
-    
-    if (!organisation.length) {
-        throw createError({
-            statusCode: 400,
-            errorEnum: "ORGANISATION_NOT_REGISTERED",
-            message: `The organisation doesn't exist with id: ${organisationId}`,
-        });
+        if (!organisation.length) {
+            throw createError({
+                statusCode: 400,
+                errorEnum: "ORGANISATION_NOT_REGISTERED",
+                message: `The organisation doesn't exist with id: ${organisationId}`,
+            });
+        }
+    }
+
+    if (uid) {
+        const organisation = await getOrganisationById(NaN, uid)
+
+        if (organisation.length) {
+            throw createError({
+                statusCode: 400,
+                errorEnum: "ORGANISATION_ALREADY_REGISTERED",
+                message: `The organisation already exist with uid: ${uid}`,
+            });
+        }
     }
 };
