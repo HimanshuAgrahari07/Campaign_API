@@ -26,7 +26,9 @@ const router = Router({ mergeParams: true });
 
 // Organizations
 import organisation from "./../no-auth/organisations";
-router.use("/", organisation);
+router.use("/:orgId(\\d+)/organisations",
+    checkIfParameterExists,
+    organisation);
 
 // CAMPAIGNS
 import campaign from "../authentication/campaign";

@@ -123,10 +123,10 @@ export const getOrganisation = async (param: IOrganisation) => {
     return await runQuery(query)
 }
 
-export const getOrganisationById = async (id: number): Promise<IOrganisation[]> => {
-    if (!id) return; // if none provided, return
+export const getOrganisationById = async (organisationId: number, uid?: string): Promise<IOrganisation[]> => {
+    if (!organisationId) return; // if none provided, return
 
-    const where = getWhereQuery({ id }, 'OR')
+    const where = getWhereQuery({ id: organisationId, uid: uid }, 'OR')
 
     const query = `SELECT *
                    FROM ${ORGANIZATION_TABLE_NAME}

@@ -7,7 +7,7 @@ Content-Type: application/json
   "lastName": "Doe",
   "mobile": "90048120511",
   "countryId": 2,
-  "organisation": { "name": "TESTTTTT", "uid": "TestTTTT" }
+  "organisation": { "name": "Osmosys", "uid": "OSMO" }
 }
 
 ###
