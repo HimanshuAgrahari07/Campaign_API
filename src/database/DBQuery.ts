@@ -1,10 +1,10 @@
 import runQuery from './Database'
-import { ICampaign, ICampaignBasics, IOrganisation } from '../interfaces/index'
+import { ICampaign, ICampaignBasics, IOrganisation, RequireAtLeastOne } from '../interfaces/index'
 import { createError, ErrorType } from '../errors/createError'
 
 // joins default values using AND
 const getWhereQuery = (valuesObject: any, joinBy?: 'AND' | 'OR') => {
-    const requiredData = Object.entries(valuesObject).filter(e => e[1])
+    const requiredData = Object.entries(valuesObject).filter(e => Boolean(e[1]))
     const where = requiredData.map(e => `${e[0]}='${e[1]}'`).join(` ${joinBy || 'AND'} `)
     console.log('where >>> ', where)
     return where
@@ -111,11 +111,11 @@ export const createNewOrganisation = async (param: IOrganisation) => {
     return await runQuery(queryString)
 }
 
-export const getOrganisation = async (param: IOrganisation) => {
+export const getOrganisation = async (param: RequireAtLeastOne<IOrganisation, 'name' | 'id'| 'uid'>) => {
     const { name, uid, id } = param
     if (!(name || uid || id)) return; // if none provided, return
 
-    const where = getWhereQuery(param, 'OR')
+    const where = getWhereQuery(param, 'AND')
 
     const query = `SELECT *
                    FROM ${ORGANIZATION_TABLE_NAME}
@@ -124,9 +124,8 @@ export const getOrganisation = async (param: IOrganisation) => {
 }
 
 export const getOrganisationById = async (organisationId: number, uid?: string): Promise<IOrganisation[]> => {
-    if (!organisationId) return; // if none provided, return
 
-    const where = getWhereQuery({ id: organisationId, uid: uid }, 'OR')
+    const where = getWhereQuery({ id: organisationId, uid: uid }, 'AND')
 
     const query = `SELECT *
                    FROM ${ORGANIZATION_TABLE_NAME}

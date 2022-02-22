@@ -19,8 +19,8 @@ export interface IToken {
 }
 
 export interface IOrganisation {
-    name: string;
-    uid: string;
+    name?: string;
+    uid?: string;
     id?: number;
     createdAt?: string;
     updatedAt?: string;

@@ -45,6 +45,11 @@ export const createOne = async (request: Request, response: Response, next: Next
 export const getAll = async (request: Request, response: Response, next: NextFunction) => {
     const orgId = parseInt(request.params.orgId)
     const devicesList = await services.getDevicesList(orgId)
+    
+    if(devicesList.length === 0) {
+        return next(createError({...ErrorType.RESOURCE_NOT_FOUND, message: `No devices found for organisation with id ${orgId}`}))
+    }
+
     const hydrateDevicesList = await Promise.all(devicesList.map(async (device) => hydratorsDevice({
         deviceId: device.id,
     }))).catch(error => next(error))

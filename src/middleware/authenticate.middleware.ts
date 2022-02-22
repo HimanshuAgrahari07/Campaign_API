@@ -1,6 +1,6 @@
 import { NextFunction, Response, Request } from 'express';
 import HttpException from '../exceptions/HttpException';
-import { decodeUserToken } from "../utils/jwt";
+import { decodeUserToken, verifyToken } from "../utils/jwt";
 import { GenericError } from '../utils/const'
 
 export default async (req: Request, res: Response, next: NextFunction) => {
@@ -12,9 +12,15 @@ export default async (req: Request, res: Response, next: NextFunction) => {
         return next(new HttpException(GenericError.WrongAuthentication.error));
     }
 
-    const decodedUserInfo = decodeUserToken({ token });
-    /**@ts-ignore */
-    req.decodedUserInfo = decodedUserInfo
+    const isValidToken = verifyToken({ token })
+    
+    if (!isValidToken) {
+        return next(new HttpException(GenericError.WrongAuthentication.error));
+    } else {
+        const decodedUserInfo = decodeUserToken({ token });
+        /**@ts-ignore */
+        req.decodedUserInfo = decodedUserInfo
 
-    return next()
+        return next()
+    }
 };
