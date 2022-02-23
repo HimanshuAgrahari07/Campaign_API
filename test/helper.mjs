@@ -1,28 +1,29 @@
-const moment = require("moment");
-const uuid = require("uuid");
-const qs = require("qs");
-const _ = require("lodash");
+import moment from "moment";
+import _ from "lodash";
 
-const fs = require("fs");
-const path = require("path");
+import fs from "fs";
+import path from "path";
 
-const { postWithHeaders, putNoAuth, uploadWithHeaders } = require("./utils");
-const {
-    generateUserWithNewOrganisation,
-    generateUserWithExistingOrganisation,
-    generateOrganisation
-} = require("./testData")
+import { postWithHeaders, putNoAuth, uploadWithHeaders, postNoAuth } from "./utils.mjs";
+import { generateUserWithNewOrganisation, generateUserWithExistingOrganisation, generateOrganisation } from "./testData.mjs";
 
-exports.createUser = async () => {
-    const user = generateUserWithNewOrganisation()
+export async function createUserForNewOrganisation(userRecord) {
+    let user;
+
+    if (userRecord) {
+        user = userRecord
+    } else {
+        user = generateUserWithNewOrganisation()
+    }
+    
     const req = { ...user };
-    const res = await putNoAuth(`signup`, req);
+    const res = await postNoAuth(`/signup`, req, true);
     return { req, res };
-};
+}
 
-exports.createUserForExistingOrg = async () => {
-    const user = generateUserWithExistingOrganisation()
+export async function createUserForExistingOrg(organisationId) {
+    const user = generateUserWithExistingOrganisation(organisationId)
     const req = { ...user };
-    const res = await putNoAuth(`signup`, req);
+    const res = await postNoAuth(`/signup`, req);
     return { req, res };
-};
+}

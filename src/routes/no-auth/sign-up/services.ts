@@ -33,6 +33,7 @@ export const SignUp = async (body: any, next: NextFunction) => {
         return next(err);
     }
 
+    console.log('password, ', password)
     const hashedPw = crypto.createHash("sha256").update(password).digest("hex");
     const isNewUser = !!organisation
 

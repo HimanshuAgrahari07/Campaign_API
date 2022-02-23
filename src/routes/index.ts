@@ -5,7 +5,9 @@ import authenticate from "../middleware/authenticate.middleware"
 
 const router = express.Router();
 
-// middleware
+// health check
+import utilities from "./utilities"
+router.use("/utilities", utilities);
 
 // Auth
 import login from "./no-auth/login";
