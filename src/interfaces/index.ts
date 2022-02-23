@@ -16,6 +16,7 @@ export type RequireAtLeastOne<T, Keys extends keyof T = keyof T> =
 
 export interface IToken {
     token: string;
+    secret: string;
 }
 
 export interface IOrganisation {

@@ -12,6 +12,9 @@ router.use("/signup", signup);
 import change_password from "./authentication/change-password";
 router.use("/change_password", change_password);
 
+import reset_password from "./authentication/reset-password";
+router.use("/reset_password", reset_password);
+
 import resolutions from "./no-auth/resolutions";
 router.use("/resolutions", resolutions);
 

@@ -4,6 +4,15 @@ import { IToken } from "interfaces";
 /**@ts-ignore */
 import * as config from "../configuration";
 const jwt = require('jsonwebtoken');
+export const verifyToken = ({ token, secret }: IToken) => {
+    const verifiedAndDecodedToken = jwt.verify(token, secret);
+
+    if (Date.now() >= verifiedAndDecodedToken.exp) {
+        return false
+    }
+
+    return true
+};
 
 export const createUserToken = ({ userInfo }: any) => {
     const exp = moment().add(config.jwt.user.expiration, "second").valueOf();
@@ -36,17 +45,11 @@ export const createUserToken = ({ userInfo }: any) => {
         refreshTokenExpiresIn: refreshExp - moment().valueOf(),
     };
 };
-export const verifyToken = ({ token }: IToken) => {
-    const verifiedAndDecodedToken = jwt.verify(token, config.jwt.user.secret);
 
-    if (Date.now() >= verifiedAndDecodedToken.exp) {
-        return false
-    }
+export const decodeUserToken = (token: string) => {
+    const isValidToken = verifyToken({ token, secret: config.jwt.user.secret });
+    if (!isValidToken) return {};
 
-    return true
-};
-
-export const decodeUserToken = ({ token }: IToken) => {
     const decoded = jwt.decode(token, config.jwt.user.secret);
     const userInfo = JSON.parse(decoded.sub);
     return userInfo;
@@ -57,7 +60,7 @@ export const createPasswordResetToken = ({ userInfo }: any) => {
         .add(config.jwt.forgotPassword.expiration, "second")
         .valueOf();
 
-    const token = jwt.encode(
+    const token = jwt.sign(
         {
             sub: JSON.stringify(userInfo),
             iat: Date.now(),
@@ -73,7 +76,10 @@ export const createPasswordResetToken = ({ userInfo }: any) => {
     };
 };
 
-export const decodePasswordResetToken = ({ token }: IToken) => {
+export const decodePasswordResetToken = (token: string) => {
+    const isValidToken = verifyToken({ token, secret: config.jwt.forgotPassword.secret });
+    if (!isValidToken) return {};
+
     const decoded = jwt.decode(token, config.jwt.forgotPassword.secret);
     const userInfo = JSON.parse(decoded.sub);
     return userInfo;

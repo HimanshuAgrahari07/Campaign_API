@@ -2,6 +2,7 @@ import { NextFunction, Response, Request } from 'express';
 import HttpException from '../exceptions/HttpException';
 import { decodeUserToken, verifyToken } from "../utils/jwt";
 import { GenericError } from '../utils/const'
+const _ = require("lodash");
 
 export default async (req: Request, res: Response, next: NextFunction) => {
     const authorization = (req.headers && req.headers.authorization)
@@ -12,15 +13,12 @@ export default async (req: Request, res: Response, next: NextFunction) => {
         return next(new HttpException(GenericError.WrongAuthentication.error));
     }
 
-    const isValidToken = verifyToken({ token })
-    
-    if (!isValidToken) {
+    const decodedUserInfo = decodeUserToken(token);
+    if (_.isEmpty(decodedUserInfo)) {
         return next(new HttpException(GenericError.WrongAuthentication.error));
     } else {
-        const decodedUserInfo = decodeUserToken({ token });
         /**@ts-ignore */
         req.decodedUserInfo = decodedUserInfo
-
-        return next()
     }
+    return next()
 };

@@ -43,10 +43,6 @@ module.exports = {
     email: {
         EMAIL_USERNAME: process.env.EMAIL_USERNAME || "",
         EMAIL_PASSWORD: process.env.EMAIL_PASSWORD || "",
-        CLIENT_ID: process.env.CLIENT_ID || "",
-        CLIENT_SECRET: process.env.CLIENT_SECRET || "",
-        REFRESH_TOKEN: process.env.REFRESH_TOKEN || "",
-        REDIRECT_URL: process.env.REDIRECT_URL || "",
         EMAIL_FROM: process.env.EMAIL_FROM || "",
         EMAIL_FROM_NAME: process.env.EMAIL_FROM_NAME || "",
     }

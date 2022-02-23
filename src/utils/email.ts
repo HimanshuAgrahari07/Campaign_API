@@ -36,7 +36,7 @@ const sendEmail = (mailConfigurations: IEmail) => {
     });
 }
 
-export const sendResetPasswordEmail = (email: string, token: string) => {
+export const sendResetPasswordEmail = async (email: string, token: string) => {
     const mailConfigurations = getConfiguration({
         to: email,
         subject: 'Reset Password',

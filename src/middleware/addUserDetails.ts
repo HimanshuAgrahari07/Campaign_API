@@ -7,11 +7,12 @@ export default async (req: Request, res: Response, next: NextFunction) => {
     /** @ts-ignore */
     const { decodedUserInfo = {} } = req;
     console.log('[[decodedUserInfo]] >>>> ', decodedUserInfo)
-    const email = decodedUserInfo.email || req.body.email
+    const email = decodedUserInfo.email || req.body.email;
+    const id = decodedUserInfo.id || req.body.id;
 
     let record: any;
 
-    const userDetails = await getUser({ email })
+    const userDetails = await getUser({ email, id })
     if (!userDetails.length) next(createError(ErrorType.WRONG_CREDENTIALS))
 
     record = userDetails[0];
