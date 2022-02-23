@@ -58,11 +58,12 @@ export interface IHydrateUser extends IUser {
     organisation: IOrganisation;
 }
 
-export interface IHydrateUserParameters {
-    email: string;
+interface IHydratorParams {
+    record?: any;
     id?: number;
-    mobile?: string;
 }
+
+export type IHydrator = RequireAtLeastOne<IHydratorParams, 'record' | 'id'>
 
 // DEVICE
 export interface IDeviceResolution {
@@ -143,4 +144,31 @@ export interface ICampaign extends ICampaignBasics {
     createdAt?: string;
     updatedAt?: string;
     organisation: IOrganisation;
+}
+
+
+/**
+ * @param {any} attachment
+ * @example
+ * attachments: [
+  {  
+    // utf-8 string as an attachment, create a file and attach it
+    filename: 'text.txt',
+    content: 'Hello, Buddy!'
+  },
+  {   
+    // filename and content type is derived from path
+    path: '/home/file/path/to/your/file.pdf'
+  },
+  {   
+    // use URL as an attachment
+    filename: 'license.txt',
+    path: 'https://raw.github.com/nodemailer/nodemailer/master/LICENSE'
+  }
+ */
+export interface IEmail {
+    to: string | string[];
+    subject: string;
+    text: string;
+    attachments?: any[];
 }

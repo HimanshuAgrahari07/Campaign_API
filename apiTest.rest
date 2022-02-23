@@ -7,6 +7,7 @@ Content-Type: application/json
   "lastName": "Doe",
   "mobile": "90048120514",
   "countryId": 2,
+  "password": "123456",
   "organisation": { "name": "Osmosys", "uid": "OSM2" }
 }
 

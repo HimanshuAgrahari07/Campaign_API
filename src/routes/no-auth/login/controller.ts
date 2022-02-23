@@ -3,34 +3,44 @@ import { SuccessResponse, GenericError } from '../../../utils/const';
 import SignInDto from '../../../dtos/signin.dto';
 import { createUserToken } from '../../../utils/jwt'
 import { createError, ErrorType } from '../../../errors/createError';
-
-import HttpException from '../../../exceptions/HttpException';
 import * as Services from './services'
+import { getHashedPassword } from '../../../utils/helper'
+import hydratorUser from '../../../lib/hydrators/hydratorsUser'
+
 
 export const signIn = async (request: Request, response: Response, next: NextFunction) => {
     const body: SignInDto = request.body;
+    const { password, email } = body;
 
-    const responseFromDB = await Services.SignIn(body)
-        .catch(err => {
-            const userNotFound = err.name === 'USER_NO_EXIST';
-            if (userNotFound) return next(createError(ErrorType.WRONG_CREDENTIAL))
-            return next(new HttpException({...GenericError.ServerError.error, message: err.message}))
-        });
+    /**@ts-ignore */
+    let { user, hydratedUser } = request;
 
-    if (responseFromDB) {
-        if (responseFromDB) {
-            const {
-                token,
-                tokenExpires,
-                refreshToken,
-                refreshTokenExpires,
-            } = createUserToken({ userInfo: { id: responseFromDB.id, email: responseFromDB.email } });
+    if (!user) {
+        user = await Services.getUser({ email });
+    }
 
-            const out = { ...responseFromDB, token, tokenExpires, refreshToken, refreshTokenExpires };
+    const hashedPwd = getHashedPassword(password);
 
-            SuccessResponse(request, response, out)
-        } else {
-            response.status(500).json({ message: 'Something went wrong' })
+    if (user) {
+        const isPasswordCorrect = user.password === hashedPwd;
+        if (!isPasswordCorrect) {
+            return next(createError(ErrorType.WRONG_CREDENTIAL));
         }
     }
+
+    if (!hydratedUser) {
+        hydratedUser = await hydratorUser({ record: user });
+    }
+
+    // now we can send the response
+    const {
+        token,
+        tokenExpires,
+        refreshToken,
+        refreshTokenExpires,
+    } = createUserToken({ userInfo: { id: user.id, email: user.email } });
+
+    const out = { ...hydratedUser, token, tokenExpires, refreshToken, refreshTokenExpires };
+
+    SuccessResponse(request, response, out)
 }

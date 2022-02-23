@@ -94,6 +94,16 @@ export const ErrorType = {
     errorEnum: errorEnums.BAD_REQUEST,
     message: "All the required information should be filled.",
   },
+  PASSWORD_NO_MATCH: {
+    statusCode: 403,
+    errorEnum: errorEnums.WRONG_CREDENTIALS,
+    message: "Passwords don't match.",
+  },
+  WRONG_CREDENTIALS: {
+    statusCode: 403,
+    errorEnum: errorEnums.WRONG_CREDENTIALS,
+    message: "Some of the credential are not correct.",
+  },
 };
 
 export const createError = (

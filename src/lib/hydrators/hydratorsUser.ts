@@ -1,39 +1,31 @@
-const _ = require("lodash");
+import * as query from '../../database/DBQuery'
+import * as queryCountry from '../../database/DBQueryCountry'
 
-import runQuery from '../../database/Database'
 import { USERS_TABLE_NAME, ORGANIZATION_TABLE_NAME, COUNTRIES_TABLE_NAME } from '../../utils/const'
-import { IUser, IHydrateUser } from '../../interfaces/index'
-import { IHydrateUserParameters } from '../../interfaces';
+import { IUser, IHydrator, IHydrateUser } from '../../interfaces/index'
 
-export default async (params: IHydrateUserParameters) => {
-    const { email, id, mobile } = params;
 
-    const validValues = Object.entries({ email, id, mobile }).filter(e => e[1])
-    const where = validValues.map(e => `${e[0]}='${e[1]}'`).join(' AND ')
+export default async ({ record, id }: IHydrator) => {
+    if(!(record || id)) return null;
 
-    const query = `SELECT * 
-    FROM ${USERS_TABLE_NAME || 'users'}
-    WHERE ${where};`
+    if (!record) {
+        const user = await query.getUser({ id });
+        record = user[0];
+    }
 
-    const userDetails = await runQuery(query);
-    const userDetail: any = userDetails[0];
-
+    if (!record) { return null; } // return if still no record
 
     /******** Get organisations */
-    const organisationId = userDetail.organisationId;
-    const organization = await runQuery(`SELECT * 
-                                    FROM ${ORGANIZATION_TABLE_NAME || 'organisations'}
-                                    WHERE id = '${organisationId}';`);
-    // const outOrganisationDetails = _.pick(userDetails, []);
+    const organisationId = record.organisationId;
+    const organization = await query.getOrganisation({ id: organisationId });
+
     //******** Get country */
-    const countryId = userDetail.countryId;
-    const country = await runQuery(`SELECT * 
-                                    FROM ${COUNTRIES_TABLE_NAME || 'countries'}
-                                    WHERE id = '${countryId}';`);
+    const countryId = record.countryId;
+    const country = await queryCountry.getCountry({ id: countryId });
 
     // const outCountryDetails = _.pick(userDetails, Object.keys(new UserDto().country));
     const out: IHydrateUser = {
-        ...userDetail,
+        ...record,
         organisation: organization[0],
         country: country[0]
     };

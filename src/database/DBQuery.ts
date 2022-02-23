@@ -1,26 +1,8 @@
 import runQuery from './Database'
 import { ICampaign, ICampaignBasics, IOrganisation, RequireAtLeastOne } from '../interfaces/index'
 import { createError, ErrorType } from '../errors/createError'
-
-// joins default values using AND
-const getWhereQuery = (valuesObject: any, joinBy?: 'AND' | 'OR') => {
-    const requiredData = Object.entries(valuesObject).filter(e => Boolean(e[1]))
-    const where = requiredData.map(e => `${e[0]}='${e[1]}'`).join(` ${joinBy || 'AND'} `)
-    console.log('where >>> ', where)
-    return where
-}
-
-const getUpdateSetQueryString = (params: {}) => {
-    const dateArray = ['updatedAt', 'startDate', 'endDate']
-    const requiredData = Object.entries(params).filter(e => e[1])
-    return requiredData.map(e => {
-        const isADateColumn = dateArray.includes(e[0])
-        if (isADateColumn) {
-            return `${e[0]}=DATE_FORMAT(STR_TO_DATE('${e[1]}','%Y-%m-%dT%H:%i:%s.000Z'),'%Y-%m-%d %H:%i:%s')`
-        }
-        return `${e[0]}='${e[1]}'`
-    }).join(', ')
-}
+import * as helper from './queryHelper'
+import { getWhereQuery, getUpdateSetQueryString } from './queryHelper'
 
 
 /**
@@ -29,10 +11,9 @@ const getUpdateSetQueryString = (params: {}) => {
  * ****************************************************************
  */
 import { USERS_TABLE_NAME } from '../utils/const'
-export const getUser = async ({ userId, email, mobile }: { userId?: number, email?: string, mobile?: string }) => {
-    if (!(userId || email || mobile)) return; // if none provided, return
+export const getUser = async (params: any) => {
 
-    const where = getWhereQuery({ userId, email, mobile }, 'OR')
+    const where = getWhereQuery(params, 'AND')
 
     const query = `SELECT *
                    FROM ${USERS_TABLE_NAME}
@@ -41,7 +22,7 @@ export const getUser = async ({ userId, email, mobile }: { userId?: number, emai
     return await runQuery(query)
 }
 
-export async function addNewUser({
+export const addNewUser = async({
     email,
     firstName,
     lastName,
@@ -59,7 +40,7 @@ export async function addNewUser({
     password: string;
     organisationId: number;
     role?: 'USER' | 'ADMIN';
-}) {
+}) => {
     const queryString = `INSERT IGNORE INTO ${USERS_TABLE_NAME} (
         firstName,
         lastName,
@@ -84,6 +65,26 @@ export async function addNewUser({
     );`
 
     return await runQuery(queryString)
+}
+
+export const updateUser = async (userId: number, params: {
+    email?: string;
+    firstName?: string;
+    lastName?: string;
+    mobile?: string;
+    countryId?: number;
+    organisationId?: number;
+    role?: string;
+    confirmed?: 0 | 1;
+    password?: string;
+}) => {
+    const queryString = getUpdateSetQueryString(params)
+
+    const query = `UPDATE ${USERS_TABLE_NAME}
+                    SET ${queryString}
+                    WHERE id = ${userId};`;
+
+    return await runQuery(query)
 }
 
 
@@ -111,7 +112,7 @@ export const createNewOrganisation = async (param: IOrganisation) => {
     return await runQuery(queryString)
 }
 
-export const getOrganisation = async (param: RequireAtLeastOne<IOrganisation, 'name' | 'id'| 'uid'>) => {
+export const getOrganisation = async (param: RequireAtLeastOne<IOrganisation, 'name' | 'id' | 'uid'>) => {
     const { name, uid, id } = param
     if (!(name || uid || id)) return; // if none provided, return
 

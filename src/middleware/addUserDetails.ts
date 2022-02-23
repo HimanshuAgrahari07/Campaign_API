@@ -1,33 +1,24 @@
 import { NextFunction, Response, Request } from 'express';
-import HttpException from '../exceptions/HttpException';
-import { GenericError } from '../utils/const'
 import hydrateUser from '../lib/hydrators/hydratorsUser'
 import { getUser } from '../database/DBQuery';
+import { createError, ErrorType } from '../errors/createError';
 
 export default async (req: Request, res: Response, next: NextFunction) => {
     /** @ts-ignore */
-    const { decodedUserInfo } = req;
+    const { decodedUserInfo = {} } = req;
     console.log('[[decodedUserInfo]] >>>> ', decodedUserInfo)
-    const { email } = decodedUserInfo;
-    
+    const email = decodedUserInfo.email || req.body.email
+
     let record: any;
 
-    try {
-        const userDetails = await getUser({ email })
+    const userDetails = await getUser({ email })
+    if (!userDetails.length) next(createError(ErrorType.WRONG_CREDENTIALS))
 
-        if (!userDetails.length) throw new Error(`No user exists with given token`)
-        
-        record = userDetails[0];
-    } catch (err) {
-        // invalid token or user not found
-        return next(new HttpException(GenericError.WrongAuthentication.error));
-    }
+    record = userDetails[0];
 
     // hydrate user
     const hydratedUser = await hydrateUser({
-        id: record.id,
-        email: record.email,
-        mobile: record.mobile,
+        record
     });
 
     // attach user and roles
