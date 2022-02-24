@@ -90,7 +90,7 @@ export const createVerifyEmailToken = ({ userInfo }: any) => {
         .add(config.jwt.verifyEmail.expiration, "second")
         .valueOf();
 
-    const token = jwt.encode(
+    const token = jwt.sign(
         {
             sub: JSON.stringify(userInfo),
             iat: Date.now(),
@@ -106,7 +106,10 @@ export const createVerifyEmailToken = ({ userInfo }: any) => {
     };
 };
 
-export const decodeVerifyEmailToken = ({ token }: IToken) => {
+export const decodeVerifyEmailToken = (token: string) => {
+    const isValidToken = verifyToken({ token, secret: config.jwt.verifyEmail.secret });
+    if (!isValidToken) return {};
+
     const decoded = jwt.decode(token, config.jwt.verifyEmail.secret);
     const userInfo = JSON.parse(decoded.sub);
     return userInfo;
