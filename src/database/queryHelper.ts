@@ -2,7 +2,6 @@
 export const getWhereQuery = (valuesObject: any, joinBy?: 'AND' | 'OR') => {
     const requiredData = Object.entries(valuesObject).filter(e => Boolean(e[1]))
     const where = requiredData.map(e => `${e[0]}='${e[1]}'`).join(` ${joinBy || 'AND'} `)
-    console.log('where >>> ', where)
     return where
 }
 

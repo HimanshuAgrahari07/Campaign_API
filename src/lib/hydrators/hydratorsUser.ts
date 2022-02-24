@@ -6,7 +6,7 @@ import { IUser, IHydrator, IHydrateUser } from '../../interfaces/index'
 
 
 export default async ({ record, id }: IHydrator) => {
-    if(!(record || id)) return null;
+    if (!(record || id)) return null;
 
     if (!record) {
         const user = await query.getUser({ id });
@@ -18,6 +18,8 @@ export default async ({ record, id }: IHydrator) => {
     /******** Get organisations */
     const organisationId = record.organisationId;
     const organization = await query.getOrganisation({ id: organisationId });
+
+    if (!(organization && organization.length)) return null;
 
     //******** Get country */
     const countryId = record.countryId;

@@ -46,14 +46,16 @@ const lastNameList = [
   "Whittle",
 ];
 
-const organisationList = [
-  { "name": "Osmosys1", "uid": "OSM1" },
-  { "name": "Osmosys2", "uid": "OSM2" },
-  { "name": "Osmosys3", "uid": "OSM3" },
-  { "name": "Osmosys4", "uid": "OSM4" },
-  { "name": "Osmosys5", "uid": "OSM5" },
-  { "name": "Osmosys6", "uid": "OSM6" }
-]
+function makeId(length) {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  var charactersLength = characters.length;
+  for (var i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+
+  return result;
+}
 
 function _getRandomEntry(entryList) {
   const idx = Math.floor(Math.random() * entryList.length);
@@ -70,12 +72,18 @@ const makeCounter = () => {
 
 const phoneNumberCounter = makeCounter();
 
-export const generateUserWithNewOrganisation = () => {
-  const organisation = _getRandomEntry(organisationList);
+function createOrganisation() {
+  const uid = makeId(4);
+  const name = makeId(10);
+
+  return { uid, name }
+}
+
+function createBasicUser() {
   const firstName = _getRandomEntry(firstNameList)
   const lastName = _getRandomEntry(lastNameList)
   const email = `${firstName}.${lastName}.${Math.floor(Math.random() * 100)}@gmail.com`
-  const mobile = `${phoneNumberCounter()}`.padStart(10, "0");
+  const mobile = `${Math.floor(Math.random() * 100000)}`.padStart(10, "0");
   const countryId = Math.floor(Math.random() * 100);
   const password = `${firstName}${lastName}123`;
 
@@ -85,31 +93,35 @@ export const generateUserWithNewOrganisation = () => {
     lastName,
     mobile,
     countryId,
-    organisation,
     password
+  }
+}
+
+
+export const generateUserWithNewOrg = () => {
+  return {
+    ...createBasicUser(),
+    organisation: createOrganisation(),
   }
 };
 
-export const generateUserWithExistingOrganisation = (organisationId) => {
-  const basicInfo = generateUserWithNewOrganisation()
-  const {organisation, ...rest} = basicInfo;
-
+export const generateUserWithExistingOrg = (organisationId) => {
   return {
-    ...rest,
-    organisationId: organisationId,
+    ...createBasicUser(),
+    organisationId,
     role: 'USER'
   }
 };
 
 export const generateDevice = (resolutionId) => {
-  const basicInfo = _getRandomEntry(newUserWithExistingOrg)
-
   return {
-    ...basicInfo,
-    resolutionId: resolutionId
+    uid: makeId(4),
+    deviceName: makeId(20),
+    deviceModel: makeId(15),
+    deviceBrand: makeId(10),
+    resolutionId: resolutionId || Math.floor(Math.random() * 10),
+    deviceSize: `${Math.floor(Math.random() * 100)} inch`,
+    deviceLocation: makeId(10),
+    deviceStatus: ['CONFIGURED', 'NOT CONFIGURED'][Math.floor(Math.random() * 2)],
   }
-};
-
-export const generateOrganisation = () => {
-  return _getRandomEntry(organisationList)
 };

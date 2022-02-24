@@ -3,6 +3,10 @@ import * as express from "express";
 
 const router = express.Router();
 
+// health check
+import utilities from "./utilities"
+router.use("/utilities", utilities);
+
 import login from "./no-auth/login";
 router.use("/login", login);
 
