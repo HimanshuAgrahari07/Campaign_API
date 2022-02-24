@@ -40,4 +40,10 @@ module.exports = {
             path: process.env.CONTENTS_PATH || `./public/contents/upload/`,
         }
     },
+    email: {
+        EMAIL_USERNAME: process.env.EMAIL_USERNAME || "",
+        EMAIL_PASSWORD: process.env.EMAIL_PASSWORD || "",
+        EMAIL_FROM: process.env.EMAIL_FROM || "",
+        EMAIL_FROM_NAME: process.env.EMAIL_FROM_NAME || "",
+    }
 };

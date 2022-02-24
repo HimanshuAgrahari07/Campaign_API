@@ -3,8 +3,10 @@ import { Request, Response, NextFunction } from 'express';
 import { checkUserEmail, checkUserPhone, checkIfOrganisationExits } from '../../../utils/userCreation'
 import * as query from '../../../database/DBQuery'
 import hydrateUser from '../../../lib/hydrators/hydratorsUser'
+import { createError, ErrorType } from "../../../errors/createError";
+import { getHashedPassword } from "../../../utils/helper";
 
-export const SignUp = async (body: any, next: NextFunction) => {
+export const SignUp = async (body: any) => {
     const {
         email,
         firstName,
@@ -18,24 +20,20 @@ export const SignUp = async (body: any, next: NextFunction) => {
 
     // validate
     // check for duplicate email, phone
-    try {
-        await checkUserEmail({ email });
-        await checkUserPhone({ phone: mobile });
-        if (organisationId) {
-            await checkIfOrganisationExits({ organisationId })
-        }
-
-        if(organisation) {
-            await checkIfOrganisationExits({ organisationId: NaN, uid: organisation.uid })
-        }
-    } catch (err) {
-        console.error(err)
-        return next(err);
+    await checkUserEmail({ email });
+    await checkUserPhone({ phone: mobile });
+    if (organisationId) {
+        await checkIfOrganisationExits({ organisationId })
     }
 
-    console.log('password, ', password)
-    const hashedPw = crypto.createHash("sha256").update(password).digest("hex");
+    if (organisation) {
+        await checkIfOrganisationExits({ organisationId: NaN, uid: organisation.uid })
+    }
+
+    const hashedPw = getHashedPassword(password);
     const isNewUser = !!organisation
+
+    let responseFromDB;
 
     if (isNewUser) {
         // create new orgs
@@ -49,7 +47,7 @@ export const SignUp = async (body: any, next: NextFunction) => {
         const organisationList = await query.getOrganisationById(insertId)
 
         // new user with new organization
-        await query.addNewUser({
+        responseFromDB = await query.addNewUser({
             email,
             firstName,
             lastName,
@@ -60,7 +58,7 @@ export const SignUp = async (body: any, next: NextFunction) => {
         })
     } else {
         // old user
-        await query.addNewUser({
+        responseFromDB = await query.addNewUser({
             email,
             firstName,
             lastName,
@@ -71,6 +69,15 @@ export const SignUp = async (body: any, next: NextFunction) => {
         })
     }
 
-    return await hydrateUser({ email, mobile })
+    if (responseFromDB.affectedRows !== 1) {
+        return createError({
+            statusCode: 500,
+            message: 'Failed to create user',
+            errorEnum: ''
+        })
+    }
+
+    return await hydrateUser({ id: responseFromDB.insertId })
+
     // TODO: Send password to user via email
 }

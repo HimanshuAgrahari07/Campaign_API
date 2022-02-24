@@ -1,27 +1,25 @@
 import * as express from "express";
-import addUserDetails from "../middleware/addUserDetails"
-import authenticate from "../middleware/authenticate.middleware"
 // routers
 
 const router = express.Router();
 
-// health check
-import utilities from "./utilities"
-router.use("/utilities", utilities);
-
-// Auth
 import login from "./no-auth/login";
 router.use("/login", login);
 
-// no auth
+import signup from "./no-auth/sign-up";
+router.use("/signup", signup);
+
+import change_password from "./authentication/change-password";
+router.use("/change_password", change_password);
+
+import reset_password from "./authentication/reset-password";
+router.use("/reset_password", reset_password);
+
 import resolutions from "./no-auth/resolutions";
 router.use("/resolutions", resolutions);
 
 import countries from "./no-auth/countries";
 router.use("/countries", countries);
-
-import signup from "./no-auth/sign-up";
-router.use("/signup", signup);
 
 import organisation from "./organisations";
 router.use("/organisation", organisation);

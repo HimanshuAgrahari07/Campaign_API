@@ -13,9 +13,9 @@ import {
 
 function _validationMiddleware(request: Request, response: Response, next: NextFunction) {
     if (request.body.organisation && !request.body.organisationId) {
-        validationMiddleware(SignUpUserWithNewOrgDto, false)
+        validationMiddleware(SignUpUserWithNewOrgDto)
     } else {
-        validationMiddleware(SignUpUserWithExistingOrgDto, false)
+        validationMiddleware(SignUpUserWithExistingOrgDto)
     }
 
     next();

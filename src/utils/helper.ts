@@ -3,5 +3,10 @@ export const getLocalStrTime = (time: string) => {
 }
 
 export const byteToMb = (byte: number) => {
-    return byte/1000000;
+    return byte / 1000000;
+}
+
+import * as crypto from "crypto";
+export const getHashedPassword = (password: string) => {
+    return crypto.createHash("sha256").update(password).digest("hex");
 }
